@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy UI - Interest Orbit & Classroom Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            950: '#060814',
+                            900: '#0b0e26',
+                            800: '#141a3d',
+                            700: '#1e2756',
+                            600: '#2d3a7c',
+                            500: '#4355b9',
+                        },
+                        cosmic: {
+                            purple: '#a855f7',
+                            pink: '#ec4899',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', filter: 'blur(10px)' },
+                            '50%': { opacity: '0.8', filter: 'blur(16px)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #060814;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Custom Cosmic Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0e26;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3a7c;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4355b9;
+        }
+
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(15, 20, 48, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-interactive {
+            background: rgba(15, 20, 48, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel-interactive:hover {
+            background: rgba(26, 34, 75, 0.8);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+        }
+
+        /* Mismatch & Alignment Glowing Rings */
+        .glow-match-perfect {
+            box-shadow: 0 0 0 2px #10b981, 0 0 15px rgba(16, 185, 129, 0.4);
+            border-color: #10b981 !important;
+        }
+        .glow-match-partial {
+            box-shadow: 0 0 0 2px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.3);
+            border-color: #f59e0b !important;
+        }
+        .glow-match-warning {
+            box-shadow: 0 0 0 2px #f43f5e, 0 0 18px rgba(244, 63, 94, 0.5);
+            border-color: #f43f5e !important;
+            animation: warningPulse 1.8s infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 0 2px #f43f5e, 0 0 12px rgba(244, 63, 94, 0.4); }
+            50% { box-shadow: 0 0 0 3px #f43f5e, 0 0 22px rgba(244, 63, 94, 0.8); }
+        }
+
+        .drag-over-pod {
+            border-color: #a855f7 !important;
+            background: rgba(168, 85, 247, 0.15) !important;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.3) inset;
+        }
+
+        /* Avatar Skin Badges */
+        .avatar-glow-cyan { filter: drop-shadow(0 0 6px #06b6d4); }
+        .avatar-glow-purple { filter: drop-shadow(0 0 6px #a855f7); }
+        .avatar-glow-gold { filter: drop-shadow(0 0 6px #f59e0b); }
+        .avatar-glow-pink { filter: drop-shadow(0 0 6px #ec4899); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased text-slate-100 selection:bg-cosmic-purple selection:text-white">
+
+    <!-- Top Bar & Navigation -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cosmic-purple via-space-500 to-cosmic-cyan flex items-center justify-center shadow-lg shadow-cosmic-purple/20">
+                    <i class="fa-solid font-bold fa-orbit text-xl text-white animate-spin-slow"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="font-display font-bold text-lg md:text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-cosmic-purple bg-clip-text text-transparent">GALAXY UI</h1>
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-cosmic-purple/20 text-cosmic-purple border border-cosmic-purple/30 rounded-full">v3.2 Orbit</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Dynamic Interest Grouping & Classroom Cosmos</p>
+                </div>
+            </div>
+
+            <div class="h-6 w-px bg-slate-800 hidden md:block"></div>
+
+            <!-- Class Selector dropdown -->
+            <div class="relative hidden md:block">
+                <button id="classSelectBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-space-800/80 border border-slate-700/60 text-xs font-semibold hover:bg-space-700 transition">
+                    <i class="fa-solid fa-graduation-cap text-cosmic-cyan"></i>
+                    <span>Grade 5 - Section Orbit (24 Students)</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center: Cycle Countdown & Status -->
+        <div class="hidden lg:flex items-center space-x-3 bg-space-900/80 px-4 py-1.5 rounded-full border border-space-700">
+            <div class="flex items-center space-x-2 text-xs">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-400">Current Orbit Cycle:</span>
+                <span class="font-semibold text-slate-200" id="currentOrbitLabel">October Galaxy</span>
+            </div>
+            <span class="text-slate-600">|</span>
+            <div class="flex items-center space-x-1.5 text-xs text-cosmic-amber font-mono">
+                <i class="fa-regular fa-clock"></i>
+                <span id="rotationCountdown">14 Days Remaining</span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center space-x-1 sm:space-x-2">
+            <div class="bg-space-900 p-1 rounded-xl border border-slate-800 flex space-x-1">
+                <button onclick="switchTab('galaxy-view')" id="tab-galaxy-view" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition bg-cosmic-purple text-white shadow-md shadow-cosmic-purple/20">
+                    <i class="fa-solid fa-atom"></i>
+                    <span class="hidden sm:inline">Galaxy Orbit</span>
+                </button>
+                <button onclick="switchTab('grid-view')" id="tab-grid-view" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-grip"></i>
+                    <span class="hidden sm:inline">Drag Allocation</span>
+                </button>
+                <button onclick="switchTab('curation-view')" id="tab-curation-view" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span class="hidden sm:inline">Curate Set List</span>
+                </button>
+                <button onclick="switchTab('schedule-view')" id="tab-schedule-view" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span class="hidden sm:inline">Rotation</span>
+                </button>
+                <button onclick="switchTab('skins-view')" id="tab-skins-view" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                    <span class="hidden sm:inline">Skins</span>
+                </button>
+            </div>
+
+            <button onclick="toggleAudio()" id="audioToggleBtn" title="Toggle Cosmic SFX" class="w-9 h-9 rounded-xl bg-space-800 border border-slate-700 text-slate-300 hover:text-cosmic-cyan flex items-center justify-center transition">
+                <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-hidden flex flex-col">
+
+        <!-- ================= VIEW 1: GALAXY ORBIT VISUALIZER ================= -->
+        <section id="view-galaxy-view" class="tab-content flex-1 relative flex flex-col min-h-[calc(100vh-65px)]">
+            <!-- Canvas Overlay Controls -->
+            <div class="absolute top-4 left-4 z-20 flex flex-wrap gap-2">
+                <div class="glass-panel px-3 py-2 rounded-xl flex items-center space-x-3 text-xs">
+                    <span class="text-slate-400">View Mode:</span>
+                    <button onclick="setGalaxyRenderMode('orbit')" id="modeOrbitBtn" class="px-2.5 py-1 rounded-md bg-cosmic-purple/30 text-cosmic-purple border border-cosmic-purple/50 font-medium">Solar System</button>
+                    <button onclick="setGalaxyRenderMode('constellation')" id="modeConstellationBtn" class="px-2.5 py-1 rounded-md bg-space-800 text-slate-400 hover:text-white font-medium">Constellation</button>
+                </div>
+
+                <div class="glass-panel px-3 py-2 rounded-xl flex items-center space-x-2 text-xs">
+                    <i class="fa-solid fa-circle-info text-cosmic-cyan"></i>
+                    <span class="text-slate-300">Click student avatar to view profile or reassign. Hover galaxy to inspect cluster.</span>
+                </div>
+            </div>
+
+            <!-- Orbit Quick Metrics Bar -->
+            <div class="absolute top-4 right-4 z-20 hidden md:flex items-center space-x-3">
+                <div class="glass-panel px-3.5 py-2 rounded-xl text-right">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Interest Galaxies</p>
+                    <p class="font-display text-lg font-bold text-cosmic-cyan" id="activeGalaxyCount">8 Groups</p>
+                </div>
+                <div class="glass-panel px-3.5 py-2 rounded-xl text-right">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Class Match Harmony</p>
+                    <p class="font-display text-lg font-bold text-emerald-400" id="harmonyScore">92% High</p>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="flex-1 w-full h-full relative cursor-grab active:cursor-grabbing bg-radial-space" id="canvasContainer">
+                <canvas id="galaxyCanvas" class="w-full h-full block"></canvas>
+
+                <!-- Floating Canvas Bottom Controls -->
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 glass-panel px-4 py-2 rounded-2xl flex items-center space-x-4 shadow-2xl border-slate-700/80">
+                    <button onclick="zoomCanvas(1.1)" class="p-2 hover:bg-space-700 rounded-lg text-slate-300 hover:text-white transition" title="Zoom In"><i class="fa-solid fa-plus text-xs"></i></button>
+                    <button onclick="zoomCanvas(0.9)" class="p-2 hover:bg-space-700 rounded-lg text-slate-300 hover:text-white transition" title="Zoom Out"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <button onclick="resetCanvasView()" class="p-2 hover:bg-space-700 rounded-lg text-slate-300 hover:text-white transition" title="Recenter View"><i class="fa-solid fa-arrows-to-dot text-xs"></i></button>
+                    <div class="h-4 w-px bg-slate-700"></div>
+                    <button onclick="toggleOrbitSpeed()" id="speedToggleBtn" class="px-3 py-1 rounded-lg bg-space-800 text-xs font-semibold text-cosmic-cyan border border-cosmic-cyan/30 hover:bg-space-700 transition">
+                        <i class="fa-solid fa-gauge-high mr-1"></i> Orbit Speed: 1x
+                    </button>
+                    <button onclick="triggerPopUpAnimation()" class="px-3 py-1 rounded-lg bg-gradient-to-r from-cosmic-purple to-cosmic-pink text-xs font-semibold text-white shadow-md hover:brightness-110 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Animate Re-Orbit
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= VIEW 2: DRAG AND DROP ALLOCATION GRID ================= -->
+        <section id="view-grid-view" class="tab-content flex-1 p-4 lg:p-8 space-y-6 hidden overflow-y-auto">
+
+            <!-- Section Banner & Instructions -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-cosmic-purple">
+                <div>
+                    <h2 class="font-display text-xl font-bold text-white flex items-center space-x-2">
+                        <span>Interactive Allocation Grid</span>
+                        <span class="text-xs font-normal text-slate-400 bg-space-800 px-2 py-0.5 rounded-md border border-slate-700">Teacher Control</span>
+                    </h2>
+                    <p class="text-xs text-slate-300 mt-1">
+                        Drag students into interest pods. Mismatched students (not in their top preferences) display a <span class="text-cosmic-rose font-semibold">Red Glow Warning Ring</span>. Top choices display a <span class="text-emerald-400 font-semibold">Green Harmony Ring</span>.
+                    </p>
+                </div>
+
+                <div class="flex items-center space-x-3 w-full md:w-auto">
+                    <div class="flex items-center space-x-2 text-xs bg-space-900 px-3 py-2 rounded-xl border border-slate-800">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500 inline-block"></span>
+                        <span class="text-slate-300">Top Match</span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500 inline-block ml-2"></span>
+                        <span class="text-slate-300">Secondary</span>
+                        <span class="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500 inline-block ml-2"></span>
+                        <span class="text-slate-300">Mismatch Warning</span>
+                    </div>
+                    <button onclick="autoOptimizeAssignments()" class="px-4 py-2 bg-gradient-to-r from-space-600 to-cosmic-purple hover:from-space-500 hover:to-cosmic-purple text-xs font-bold rounded-xl text-white shadow-lg shadow-cosmic-purple/20 transition flex items-center space-x-2 whitespace-nowrap">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>Auto-Harmonize</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Layout Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+                <!-- Left Column: Unassigned / Reserve Students Tray -->
+                <div class="lg:col-span-1 glass-panel p-4 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-display font-semibold text-sm text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-users text-cosmic-cyan"></i>
+                            <span>Student Roster</span>
+                        </h3>
+                        <span id="unassignedCountBadge" class="px-2 py-0.5 rounded-full bg-space-800 text-xs font-mono text-cosmic-cyan border border-slate-700">24 Total</span>
+                    </div>
+
+                    <!-- Search Filter -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="studentSearchInput" oninput="renderDragGrid()" placeholder="Filter student name..." class="w-full bg-space-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cosmic-purple">
+                    </div>
+
+                    <!-- Filter by Interest match -->
+                    <div class="flex gap-1">
+                        <button onclick="setGridFilter('all')" id="filterBtn-all" class="filter-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-cosmic-purple text-white flex-1">All</button>
+                        <button onclick="setGridFilter('warning')" id="filterBtn-warning" class="filter-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-space-800 text-slate-400 hover:text-white flex-1">Mismatched</button>
+                    </div>
+
+                    <!-- Drag Tray -->
+                    <div id="unassignedTray" class="space-y-2 min-h-[350px] max-h-[550px] overflow-y-auto pr-1">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column: 8 Droppable Galaxy Interest Pods -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="interestPodsGrid">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= VIEW 3: TEACHER CURATION & OVERLAP ANALYTICS ================= -->
+        <section id="view-curation-view" class="tab-content flex-1 p-4 lg:p-8 space-y-6 hidden overflow-y-auto">
+
+            <!-- Curation Header -->
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cosmic-purple/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="max-w-3xl space-y-2">
+                    <span class="px-2.5 py-1 rounded-full bg-cosmic-cyan/20 text-cosmic-cyan border border-cosmic-cyan/30 text-[11px] font-bold uppercase tracking-wider">Teacher Agency Portal</span>
+                    <h2 class="font-display text-2xl font-bold text-white">Student Submission Curation & Overlap Analysis</h2>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Students submit their top 5 favorite topics every month. Review overlap trends, filter out non-educational or inappropriate topics (e.g., weapons, window frames, or meme spam), and approve 7–8 active galaxy interests for the class.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Curation Workspace -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left 2 Cols: Aggregated Interests & Overlap Chart -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Overlap Heatmap / Bars -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-display font-semibold text-base text-slate-100">Top Submitted Student Interests</h3>
+                                <p class="text-xs text-slate-400">Aggregated from 24 student top-5 preference lists</p>
+                            </div>
+                            <button onclick="generateFreshStudentSubmissions()" class="px-3 py-1.5 bg-space-800 hover:bg-space-700 text-slate-300 rounded-xl text-xs font-semibold border border-slate-700 transition">
+                                <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh Submissions
+                            </button>
+                        </div>
+
+                        <!-- Bar chart list -->
+                        <div class="space-y-3" id="submissionAnalyticsList">
+                            <!-- JS Populated -->
+                        </div>
+                    </div>
+
+                    <!-- Custom Interest Creator -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-3">
+                        <h3 class="font-display font-semibold text-sm text-slate-200">Add Teacher-Defined Custom Interest</h3>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="customTopicName" placeholder="e.g., Quantum Physics for Kids, Solar Energy..." class="flex-1 bg-space-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-cosmic-purple">
+                            <select id="customTopicCategory" class="bg-space-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cosmic-purple">
+                                <option value="STEM">Category: STEM</option>
+                                <option value="Arts">Category: Arts & Dance</option>
+                                <option value="Nature">Category: Nature & Biology</option>
+                                <option value="History">Category: History & Fossils</option>
+                            </select>
+                            <button onclick="addCustomInterestTopic()" class="px-4 py-2 bg-cosmic-purple hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition whitespace-nowrap">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Topic
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Col: Active Approved Set List (Limit 8) -->
+                <div class="glass-panel p-5 rounded-2xl space-y-4 flex flex-col">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="font-display font-semibold text-base text-slate-100">Approved Set List</h3>
+                            <p class="text-xs text-slate-400">Selected active galaxies for this month</p>
+                        </div>
+                        <span id="activeSetCount" class="px-2.5 py-1 bg-cosmic-purple/20 text-cosmic-purple border border-cosmic-purple/40 text-xs font-bold font-mono rounded-lg">8 / 8 Active</span>
+                    </div>
+
+                    <div id="approvedSetListContainer" class="space-y-2 flex-1 min-h-[300px]">
+                        <!-- JS Rendered approved active list -->
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800">
+                        <button onclick="applyCuratedSetList()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Update Galaxy Orbit System</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= VIEW 4: ROTATION & CYCLE SCHEDULER ================= -->
+        <section id="view-schedule-view" class="tab-content flex-1 p-4 lg:p-8 space-y-6 hidden overflow-y-auto">
+
+            <div class="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-cosmic-amber bg-cosmic-amber/10 px-2.5 py-1 rounded-full border border-cosmic-amber/20">Cadence Engine</span>
+                    <h2 class="font-display text-2xl font-bold text-white mt-1">Interest Group Rotation Cadence</h2>
+                    <p class="text-xs text-slate-300 mt-1">Configure automated interest resets every 2 weeks or monthly to adapt as kids' curiosity evolves.</p>
+                </div>
+                <button onclick="triggerNewOrbitCycleModal()" class="px-5 py-2.5 bg-gradient-to-r from-cosmic-purple via-cosmic-pink to-cosmic-amber text-white text-xs font-bold rounded-xl shadow-xl hover:brightness-110 transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>Launch New Monthly Orbit</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Cadence Settings Card -->
+                <div class="glass-panel p-5 rounded-2xl space-y-4">
+                    <h3 class="font-display font-semibold text-base text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-cosmic-purple"></i>
+                        <span>Rotation Settings</span>
+                    </h3>
+
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Rotation Interval</label>
+                            <select id="rotationIntervalSelect" onchange="updateRotationCadence(this.value)" class="w-full bg-space-900 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:border-cosmic-purple">
+                                <option value="monthly" selected>Every Month (Recommended for deep dives)</option>
+                                <option value="biweekly">Every 2 Weeks (Fast rotation)</option>
+                                <option value="custom">Custom Calendar Date</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1">Student Retention Option</label>
+                            <label class="flex items-center space-x-2 bg-space-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer">
+                                <input type="checkbox" id="allowStayInInterest" checked class="rounded bg-space-800 border-slate-700 text-cosmic-purple focus:ring-0">
+                                <span class="text-slate-300 text-xs">Allow students to stay in same interest if preference matches</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1">Automated Prompting</label>
+                            <label class="flex items-center space-x-2 bg-space-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer">
+                                <input type="checkbox" checked class="rounded bg-space-800 border-slate-700 text-cosmic-purple focus:ring-0">
+                                <span class="text-slate-300 text-xs">Send preference survey 3 days prior to rotation</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Previous Orbits Timeline -->
+                <div class="md:col-span-2 glass-panel p-5 rounded-2xl space-y-4">
+                    <h3 class="font-display font-semibold text-base text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cosmic-cyan"></i>
+                        <span>Classroom Orbit History</span>
+                    </h3>
+
+                    <div class="space-y-3" id="orbitHistoryContainer">
+                        <!-- JS Populated Orbit Timeline -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= VIEW 5: STUDENT AVATAR SKINS ================= -->
+        <section id="view-skins-view" class="tab-content flex-1 p-4 lg:p-8 space-y-6 hidden overflow-y-auto">
+
+            <div class="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-cosmic-cyan bg-cosmic-cyan/10 px-2.5 py-1 rounded-full border border-cosmic-cyan/20">Gamified Avatars</span>
+                    <h2 class="font-display text-2xl font-bold text-white mt-1">Student Galaxy Skins & Visual Customizer</h2>
+                    <p class="text-xs text-slate-300 mt-1">Students earn and equip cosmetic astronaut skins when active in interest groups.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="skinsGalleryGrid">
+                <!-- JS Populated Skins cards -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- STUDENT PROFILE INSPECTOR MODAL -->
+    <div id="studentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-950/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl p-6 relative overflow-hidden space-y-5 animate-float" style="animation-duration: 0.3s; animation-iteration-count: 1;">
+            <button onclick="closeStudentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-space-800 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center space-x-4">
+                <div id="modalStudentAvatar" class="w-16 h-16 rounded-2xl bg-space-800 border-2 border-cosmic-purple flex items-center justify-center text-3xl shadow-lg shadow-cosmic-purple/30">
+                    🧑‍🚀
+                </div>
+                <div>
+                    <h3 id="modalStudentName" class="font-display text-xl font-bold text-white">Jimmy M.</h3>
+                    <p id="modalStudentSkin" class="text-xs text-cosmic-cyan font-medium">Equipped Skin: Astro Cadet</p>
+                    <span id="modalMatchBadge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% Perfect Match</span>
+                </div>
+            </div>
+
+            <!-- Current Assignment -->
+            <div class="bg-space-900 p-3 rounded-xl border border-slate-800 space-y-1">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Assigned Galaxy Pod</p>
+                <div class="flex items-center justify-between">
+                    <p id="modalCurrentPod" class="text-sm font-semibold text-slate-200">🚀 Space Exploration & Astronomy</p>
+                    <span class="text-xs text-slate-400">Group #1</span>
+                </div>
+            </div>
+
+            <!-- Student 5 Submitted Preferences -->
+            <div class="space-y-2">
+                <p class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-star text-cosmic-amber"></i>
+                    <span>Student's Top 5 Submitted Preferences:</span>
+                </p>
+                <ul id="modalStudentPrefsList" class="space-y-1.5 text-xs">
+                    <!-- JS populated -->
+                </ul>
+            </div>
+
+            <!-- Quick Action: Reassign drop down -->
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-3">
+                <select id="modalReassignSelect" class="flex-1 bg-space-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cosmic-purple">
+                    <!-- JS Options -->
+                </select>
+                <button onclick="applyModalReassignment()" class="px-4 py-2 bg-cosmic-purple hover:bg-purple-600 text-white font-bold text-xs rounded-xl transition">
+                    Reassign
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- LAUNCH NEW ORBIT MODAL -->
+    <div id="newOrbitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-950/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-lg rounded-2xl border border-cosmic-purple/40 shadow-2xl p-6 relative space-y-5">
+            <button onclick="closeNewOrbitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-cosmic-purple/20 border border-cosmic-purple text-cosmic-purple flex items-center justify-center text-2xl mx-auto shadow-lg shadow-cosmic-purple/30">
+                    <i class="fa-solid fa-rocket"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold text-white">Launch New Orbit Cycle</h3>
+                <p class="text-xs text-slate-300">This will initiate the monthly interest rotation transition, refresh student interest clusters, and animate student avatars popping into their new galaxies.</p>
+            </div>
+
+            <div class="bg-space-900 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Target Month:</span>
+                    <span class="font-bold text-cosmic-cyan">November Orbit</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Active Students:</span>
+                    <span class="font-bold text-white">24 Assigned</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Estimated Harmony:</span>
+                    <span class="font-bold text-emerald-400">96% Optimized</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeNewOrbitModal()" class="flex-1 py-2.5 bg-space-800 hover:bg-space-700 text-slate-300 text-xs font-bold rounded-xl transition">
+                    Cancel
+                </button>
+                <button onclick="executeOrbitLaunch()" class="flex-1 py-2.5 bg-gradient-to-r from-cosmic-purple via-cosmic-pink to-cosmic-amber text-white text-xs font-bold rounded-xl shadow-lg hover:brightness-110 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Execute Orbit Shift</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JS LOGIC & APPLICATION STATE -->
+    <script>
+        // Audio Synthesizer SFX (Web Audio API)
+        let audioCtx = null;
+        let audioEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'drop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'warning') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.setValueAtTime(140, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'orbitShift') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.6);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch (e) {
+                console.log('Audio Context muted or blocked');
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audioToggleBtn');
+            if (audioEnabled) {
+                btn.classList.remove('text-slate-600');
+                btn.classList.add('text-slate-300');
+                btn.innerHTML = '<i class="fa-solid fa-volume-high text-xs"></i>';
+            } else {
+                btn.classList.add('text-slate-600');
+                btn.classList.remove('text-slate-300');
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-xs"></i>';
+            }
+        }
+
+        // ================= GLOBAL APPLICATION STATE =================
+        const APP_STATE = {
+            activeTab: 'galaxy-view',
+            galaxyRenderMode: 'orbit', // 'orbit' or 'constellation'
+            orbitSpeedMultiplier: 1,
+            gridFilter: 'all', // 'all' or 'warning'
+            selectedStudentId: null,
+
+            // Approved Active Interest Galaxies (Selected by Teacher)
+            interests: [
+                { id: 'space', name: 'Space & Astronomy', icon: '🚀', color: '#a855f7', category: 'STEM', description: 'Planets, rockets, black holes, and cosmos' },
+                { id: 'ballet', name: 'Ballet & Performing Arts', icon: '🩰', color: '#ec4899', category: 'Arts', description: 'Dance choreography, rhythm, and expression' },
+                { id: 'robotics', name: 'Robotics & Coding', icon: '🤖', color: '#06b6d4', category: 'STEM', description: 'Bots, algorithms, circuit building' },
+                { id: 'marine', name: 'Marine Biology', icon: '🐬', color: '#10b981', category: 'Nature', description: 'Oceans, sea life, coral reefs' },
+                { id: 'fossils', name: 'Archaeology & Fossils', icon: '🦴', color: '#f59e0b', category: 'History', description: 'Dinosaurs, ancient ruins, excavation' },
+                { id: 'creative', name: 'Creative Writing & Arts', icon: '🎨', color: '#8b5cf6', category: 'Arts', description: 'Digital drawing, story crafting, comics' },
+                { id: 'chemistry', name: 'Fun Chemistry Lab', icon: '🧪', color: '#14b8a6', category: 'STEM', description: 'Molecules, reactions, crystals' },
+                { id: 'botany', name: 'Botany & Insects', icon: '🌿', color: '#84cc16', category: 'Nature', description: 'Plants, ecosystems, bug worlds' }
+            ],
+
+            // Cosmetic Skins available
+            skins: [
+                { id: 'cadet', name: 'Astro Cadet', emoji: '🧑‍🚀', glow: 'avatar-glow-cyan', rarity: 'Common' },
+                { id: 'cyber', name: 'Cyber Explorer', emoji: '🤖', glow: 'avatar-glow-purple', rarity: 'Rare' },
+                { id: 'star', name: 'Star Voyager', emoji: '⭐', glow: 'avatar-glow-gold', rarity: 'Epic' },
+                { id: 'cat', name: 'Cosmic Astro-Cat', emoji: '🐱', glow: 'avatar-glow-pink', rarity: 'Legendary' },
+                { id: 'wizard', name: 'Galaxy Wizard', emoji: '🧙‍♂️', glow: 'avatar-glow-purple', rarity: 'Epic' },
+                { id: 'alien', name: 'Friendly Nebula Alien', emoji: '👾', glow: 'avatar-glow-cyan', rarity: 'Rare' }
+            ],
+
+            // Roster of 24 Students with top 5 preferences
+            students: [
+                { id: 's1', name: 'Jimmy M.', skin: 'cadet', assignedInterest: 'space', preferences: ['Space & Astronomy', 'Robotics & Coding', 'Archaeology & Fossils', 'Botany & Insects', 'Fun Chemistry Lab'] },
+                { id: 's2', name: 'Sophia L.', skin: 'cat', assignedInterest: 'ballet', preferences: ['Ballet & Performing Arts', 'Creative Writing & Arts', 'Marine Biology', 'Space & Astronomy', 'Botany & Insects'] },
+                { id: 's3', name: 'Leo K.', skin: 'star', assignedInterest: 'space', preferences: ['Space & Astronomy', 'Marine Biology', 'Archaeology & Fossils', 'Robotics & Coding', 'Fun Chemistry Lab'] },
+                { id: 's4', name: 'Maya P.', skin: 'cyber', assignedInterest: 'robotics', preferences: ['Robotics & Coding', 'Space & Astronomy', 'Fun Chemistry Lab', 'Creative Writing & Arts', 'Marine Biology'] },
+                { id: 's5', name: 'Ethan R.', skin: 'wizard', assignedInterest: 'fossils', preferences: ['Archaeology & Fossils', 'Botany & Insects', 'Space & Astronomy', 'Fun Chemistry Lab', 'Marine Biology'] },
+                { id: 's6', name: 'Aria T.', skin: 'cat', assignedInterest: 'ballet', preferences: ['Ballet & Performing Arts', 'Creative Writing & Arts', 'Botany & Insects', 'Space & Astronomy', 'Marine Biology'] },
+                { id: 's7', name: 'Noah B.', skin: 'cadet', assignedInterest: 'marine', preferences: ['Marine Biology', 'Robotics & Coding', 'Space & Astronomy', 'Archaeology & Fossils', 'Fun Chemistry Lab'] },
+                { id: 's8', name: 'Chloe W.', skin: 'alien', assignedInterest: 'creative', preferences: ['Creative Writing & Arts', 'Ballet & Performing Arts', 'Marine Biology', 'Botany & Insects', 'Space & Astronomy'] },
+                { id: 's9', name: 'Liam S.', skin: 'cyber', assignedInterest: 'robotics', preferences: ['Robotics & Coding', 'Fun Chemistry Lab', 'Space & Astronomy', 'Archaeology & Fossils', 'Creative Writing & Arts'] },
+                { id: 's10', name: 'Olivia G.', skin: 'star', assignedInterest: 'chemistry', preferences: ['Fun Chemistry Lab', 'Robotics & Coding', 'Marine Biology', 'Space & Astronomy', 'Botany & Insects'] },
+                { id: 's11', name: 'Lucas N.', skin: 'wizard', assignedInterest: 'botany', preferences: ['Botany & Insects', 'Archaeology & Fossils', 'Fun Chemistry Lab', 'Marine Biology', 'Space & Astronomy'] },
+                { id: 's12', name: 'Emma D.', skin: 'cat', assignedInterest: 'ballet', preferences: ['Ballet & Performing Arts', 'Creative Writing & Arts', 'Marine Biology', 'Space & Astronomy', 'Botany & Insects'] },
+                { id: 's13', name: 'Mason K.', skin: 'cadet', assignedInterest: 'space', preferences: ['Space & Astronomy', 'Robotics & Coding', 'Fun Chemistry Lab', 'Archaeology & Fossils', 'Marine Biology'] },
+                { id: 's14', name: 'Isabella C.', skin: 'star', assignedInterest: 'marine', preferences: ['Marine Biology', 'Creative Writing & Arts', 'Ballet & Performing Arts', 'Botany & Insects', 'Space & Astronomy'] },
+                { id: 's15', name: 'Logan V.', skin: 'alien', assignedInterest: 'fossils', preferences: ['Archaeology & Fossils', 'Space & Astronomy', 'Robotics & Coding', 'Fun Chemistry Lab', 'Botany & Insects'] },
+                { id: 's16', name: 'Harper E.', skin: 'cyber', assignedInterest: 'creative', preferences: ['Creative Writing & Arts', 'Ballet & Performing Arts', 'Fun Chemistry Lab', 'Marine Biology', 'Space & Astronomy'] },
+                { id: 's17', name: 'Jacob H.', skin: 'cadet', assignedInterest: 'chemistry', preferences: ['Fun Chemistry Lab', 'Robotics & Coding', 'Space & Astronomy', 'Archaeology & Fossils', 'Botany & Insects'] },
+                { id: 's18', name: 'Amelia F.', skin: 'cat', assignedInterest: 'botany', preferences: ['Botany & Insects', 'Marine Biology', 'Creative Writing & Arts', 'Space & Astronomy', 'Ballet & Performing Arts'] },
+                { id: 's19', name: 'Benjamin R.', skin: 'star', assignedInterest: 'space', preferences: ['Space & Astronomy', 'Archaeology & Fossils', 'Robotics & Coding', 'Fun Chemistry Lab', 'Marine Biology'] },
+                { id: 's20', name: 'Charlotte K.', skin: 'wizard', assignedInterest: 'ballet', preferences: ['Ballet & Performing Arts', 'Creative Writing & Arts', 'Marine Biology', 'Space & Astronomy', 'Fun Chemistry Lab'] },
+                { id: 's21', name: 'Elijah W.', skin: 'cyber', assignedInterest: 'robotics', preferences: ['Robotics & Coding', 'Space & Astronomy', 'Fun Chemistry Lab', 'Archaeology & Fossils', 'Marine Biology'] },
+                { id: 's22', name: 'Evelyn P.', skin: 'alien', assignedInterest: 'marine', preferences: ['Marine Biology', 'Botany & Insects', 'Creative Writing & Arts', 'Space & Astronomy', 'Fun Chemistry Lab'] },
+                { id: 's23', name: 'Alexander M.', skin: 'cadet', assignedInterest: 'ballet', preferences: ['Space & Astronomy', 'Robotics & Coding', 'Fun Chemistry Lab', 'Archaeology & Fossils', 'Marine Biology'] }, // Intentional mismatch for UI demo!
+                { id: 's24', name: 'Abigail S.', skin: 'cat', assignedInterest: 'creative', preferences: ['Creative Writing & Arts', 'Ballet & Performing Arts', 'Marine Biology', 'Botany & Insects', 'Space & Astronomy'] }
+            ],
+
+            // Submissions pool for Teacher Curation View
+            rawSubmissions: [
+                { topic: 'Space & Astronomy', count: 18, category: 'STEM', approved: true, flag: false },
+                { topic: 'Robotics & Coding', count: 16, category: 'STEM', approved: true, flag: false },
+                { topic: 'Ballet & Performing Arts', count: 12, category: 'Arts', approved: true, flag: false },
+                { topic: 'Marine Biology', count: 11, category: 'Nature', approved: true, flag: false },
+                { topic: 'Creative Writing & Arts', count: 10, category: 'Arts', approved: true, flag: false },
+                { topic: 'Fun Chemistry Lab', count: 9, category: 'STEM', approved: true, flag: false },
+                { topic: 'Archaeology & Fossils', count: 8, category: 'History', approved: true, flag: false },
+                { topic: 'Botany & Insects', count: 7, category: 'Nature', approved: true, flag: false },
+                { topic: 'Window Frames & Glass', count: 2, category: 'Random', approved: false, flag: true, flagReason: 'No clear educational depth' },
+                { topic: 'Laser Blasters / Weapons', count: 3, category: 'Unsuitable', approved: false, flag: true, flagReason: 'Inappropriate topic for class' },
+                { topic: 'Video Game Speedrunning', count: 5, category: 'Tech', approved: false, flag: false }
+            ]
+        };
+
+        // Tab Switching
+        function switchTab(tabId) {
+            playSound('drop');
+            APP_STATE.activeTab = tabId;
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-cosmic-purple', 'text-white', 'shadow-md', 'shadow-cosmic-purple/20');
+                btn.classList.add('text-slate-400');
+            });
+
+            const selectedView = document.getElementById(`view-${tabId}`);
+            if (selectedView) selectedView.classList.remove('hidden');
+
+            const selectedBtn = document.getElementById(`tab-${tabId}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('bg-cosmic-purple', 'text-white', 'shadow-md', 'shadow-cosmic-purple/20');
+                selectedBtn.classList.remove('text-slate-400');
+            }
+
+            if (tabId === 'galaxy-view') {
+                resizeCanvas();
+            } else if (tabId === 'grid-view') {
+                renderDragGrid();
+            } else if (tabId === 'curation-view') {
+                renderCurationView();
+            } else if (tabId === 'schedule-view') {
+                renderScheduleView();
+            } else if (tabId === 'skins-view') {
+                renderSkinsView();
+            }
+        }
+
+
+        // ================= STREAMING_CHUNK:Adding canvas particle system and interactive space rendering engine... =================
+        // GALAXY CANVAS RENDERING ENGINE
+        let canvas, ctx;
+        let canvasZoom = 1;
+        let canvasPanX = 0, canvasPanY = 0;
+        let isDraggingCanvas = false;
+        let lastMouseX = 0, lastMouseY = 0;
+        let animationFrameId = null;
+        let stars = [];
+        let reorbitAnimProgress = 1; // 1 = complete, < 1 = animating
+
+        function initGalaxyCanvas() {
+            canvas = document.getElementById('galaxyCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Generate background star field
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * 2000 - 1000,
+                    y: Math.random() * 2000 - 1000,
+                    size: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random() * 0.8 + 0.2,
+                    speed: Math.random() * 0.02 + 0.005
+                });
+            }
+
+            // Mouse pan events
+            canvas.addEventListener('mousedown', (e) => {
+                isDraggingCanvas = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDraggingCanvas) {
+                    canvasPanX += (e.clientX - lastMouseX);
+                    canvasPanY += (e.clientY - lastMouseY);
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                }
+            });
+
+            window.addEventListener('mouseup', () => { isDraggingCanvas = false; });
+
+            // Canvas Click Detection on Student or Galaxy Node
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                handleCanvasClick(clickX, clickY);
+            });
+
+            // Start Render Loop
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            renderGalaxyLoop();
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const container = document.getElementById('canvasContainer');
+            if (container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+        }
+
+        function zoomCanvas(factor) {
+            canvasZoom = Math.min(Math.max(canvasZoom * factor, 0.5), 2.5);
+        }
+
+        function resetCanvasView() {
+            canvasZoom = 1;
+            canvasPanX = 0;
+            canvasPanY = 0;
+        }
+
+        function setGalaxyRenderMode(mode) {
+            APP_STATE.galaxyRenderMode = mode;
+            document.getElementById('modeOrbitBtn').className = mode === 'orbit' 
+                ? 'px-2.5 py-1 rounded-md bg-cosmic-purple/30 text-cosmic-purple border border-cosmic-purple/50 font-medium'
+                : 'px-2.5 py-1 rounded-md bg-space-800 text-slate-400 hover:text-white font-medium';
+            document.getElementById('modeConstellationBtn').className = mode === 'constellation' 
+                ? 'px-2.5 py-1 rounded-md bg-cosmic-cyan/30 text-cosmic-cyan border border-cosmic-cyan/50 font-medium'
+                : 'px-2.5 py-1 rounded-md bg-space-800 text-slate-400 hover:text-white font-medium';
+        }
+
+        function toggleOrbitSpeed() {
+            if (APP_STATE.orbitSpeedMultiplier === 1) APP_STATE.orbitSpeedMultiplier = 2;
+            else if (APP_STATE.orbitSpeedMultiplier === 2) APP_STATE.orbitSpeedMultiplier = 0.5;
+            else APP_STATE.orbitSpeedMultiplier = 1;
+            document.getElementById('speedToggleBtn').innerHTML = `<i class="fa-solid fa-gauge-high mr-1"></i> Orbit Speed: ${APP_STATE.orbitSpeedMultiplier}x`;
+        }
+
+        function triggerPopUpAnimation() {
+            reorbitAnimProgress = 0;
+            playSound('orbitShift');
+        }
+
+        // Render Canvas Frame
+        function renderGalaxyLoop() {
+            if (APP_STATE.activeTab === 'galaxy-view' && ctx && canvas) {
+                const width = canvas.width;
+                const height = canvas.height;
+                const time = Date.now() * 0.001 * APP_STATE.orbitSpeedMultiplier;
+
+                if (reorbitAnimProgress < 1) {
+                    reorbitAnimProgress += 0.02;
+                }
+
+                // Clear & dark space background
+                ctx.fillStyle = '#060814';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.save();
+                // Apply Zoom & Pan
+                ctx.translate(width / 2 + canvasPanX, height / 2 + canvasPanY);
+                ctx.scale(canvasZoom, canvasZoom);
+
+                // Draw background stars
+                stars.forEach(star => {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * (0.6 + 0.4 * Math.sin(time * 2 + star.x))})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Calculate Galaxy Nodes Position in a circle arrangement
+                const activeInterests = APP_STATE.interests;
+                const totalInterests = activeInterests.length;
+                const centerRadius = Math.min(width, height) * 0.28;
+
+                const galaxyPositions = {};
+
+                activeInterests.forEach((interest, idx) => {
+                    const angle = (idx / totalInterests) * Math.PI * 2 + time * 0.03;
+                    const gx = Math.cos(angle) * centerRadius;
+                    const gy = Math.sin(angle) * centerRadius;
+                    galaxyPositions[interest.id] = { x: gx, y: gy, angle: angle };
+
+                    // Draw Central Galaxy Core Glow
+                    const gradient = ctx.createRadialGradient(gx, gy, 5, gx, gy, 70);
+                    gradient.addColorStop(0, interest.color);
+                    gradient.addColorStop(0.5, interest.color + '44');
+                    gradient.addColorStop(1, 'transparent');
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, 70, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Planet Core Circle
+                    ctx.fillStyle = interest.color;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, 20, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffffff88';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Planet Icon & Name
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(interest.icon, gx, gy);
+
+                    ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText(interest.name, gx, gy + 32);
+                });
+
+                // Draw Constellation Lines if mode is constellation
+                if (APP_STATE.galaxyRenderMode === 'constellation') {
+                    ctx.strokeStyle = 'rgba(168, 85, 247, 0.15)';
+                    ctx.lineWidth = 1;
+                    activeInterests.forEach((g1, i) => {
+                        const p1 = galaxyPositions[g1.id];
+                        activeInterests.forEach((g2, j) => {
+                            if (i < j) {
+                                const p2 = galaxyPositions[g2.id];
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x, p1.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        });
+                    });
+                }
+
+                // Render Orbiting Students
+                APP_STATE.students.forEach((student, idx) => {
+                    const targetGalaxy = galaxyPositions[student.assignedInterest];
+                    if (!targetGalaxy) return;
+
+                    // Orbit offset calculated per student
+                    const studentOrbitRadius = 45 + (idx % 3) * 16;
+                    const studentSpeed = 0.5 + (idx % 5) * 0.1;
+                    const studentAngle = (time * studentSpeed) + idx * (Math.PI * 2 / 24);
+
+                    let sx = targetGalaxy.x + Math.cos(studentAngle) * studentOrbitRadius;
+                    let sy = targetGalaxy.y + Math.sin(studentAngle) * studentOrbitRadius;
+
+                    // "Pop Up" animation scale interpolation
+                    if (reorbitAnimProgress < 1) {
+                        const animFactor = Math.sin(reorbitAnimProgress * Math.PI);
+                        sx += (Math.random() - 0.5) * 40 * (1 - reorbitAnimProgress);
+                        sy -= animFactor * 50;
+                    }
+
+                    // Save computed coordinates for click detection
+                    student._canvasX = sx;
+                    student._canvasY = sy;
+
+                    // Alignment match status check
+                    const topPref = student.preferences[0];
+                    const currentInterestObj = APP_STATE.interests.find(i => i.id === student.assignedInterest);
+                    const isPerfectMatch = currentInterestObj && currentInterestObj.name === topPref;
+                    const isPartialMatch = currentInterestObj && student.preferences.includes(currentInterestObj.name);
+
+                    // Orbit path ring
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(targetGalaxy.x, targetGalaxy.y, studentOrbitRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Halo Ring around student avatar based on match
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 14, 0, Math.PI * 2);
+                    if (isPerfectMatch) {
+                        ctx.strokeStyle = '#10b981'; // Emerald match
+                        ctx.lineWidth = 2;
+                    } else if (isPartialMatch) {
+                        ctx.strokeStyle = '#f59e0b'; // Amber match
+                        ctx.lineWidth = 1.5;
+                    } else {
+                        ctx.strokeStyle = '#f43f5e'; // Warning red mismatch ring!
+                        ctx.lineWidth = 2.5;
+                    }
+                    ctx.stroke();
+
+                    // Avatar bubble fill
+                    ctx.fillStyle = '#0b0e26';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Get skin emoji
+                    const skinObj = APP_STATE.skins.find(s => s.id === student.skin) || APP_STATE.skins[0];
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(skinObj.emoji, sx, sy);
+
+                    // Student Name Tag
+                    ctx.font = '9px "Plus Jakarta Sans", sans-serif';
+                    ctx.fillStyle = isPerfectMatch ? '#e2e8f0' : (isPartialMatch ? '#cbd5e1' : '#fca5a5');
+                    ctx.fillText(student.name, sx, sy + 18);
+                });
+
+                ctx.restore();
+            }
+
+            animationFrameId = requestAnimationFrame(renderGalaxyLoop);
+        }
+
+        // Handle canvas click on student avatar
+        function handleCanvasClick(clickX, clickY) {
+            if (!canvas) return;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Translate click coordinates back to zoom/pan space
+            const worldX = (clickX - width / 2 - canvasPanX) / canvasZoom;
+            const worldY = (clickY - height / 2 - canvasPanY) / canvasZoom;
+
+            // Check if clicked near any student
+            for (let student of APP_STATE.students) {
+                if (student._canvasX && student._canvasY) {
+                    const dx = worldX - student._canvasX;
+                    const dy = worldY - student._canvasY;
+                    if (Math.sqrt(dx * dx + dy * dy) <= 20) {
+                        openStudentModal(student.id);
+                        return;
+                    }
+                }
+            }
+        }
+
+
+        // ================= STREAMING_CHUNK:Implementing drag and drop event handlers and visual feedback logic... =================
+        // DRAG AND DROP ALLOCATION GRID ENGINE
+        function setGridFilter(filter) {
+            APP_STATE.gridFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(b => {
+                b.classList.remove('bg-cosmic-purple', 'text-white');
+                b.classList.add('bg-space-800', 'text-slate-400');
+            });
+            const activeBtn = document.getElementById(`filterBtn-${filter}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-cosmic-purple', 'text-white');
+                activeBtn.classList.remove('bg-space-800', 'text-slate-400');
+            }
+            renderDragGrid();
+        }
+
+        function renderDragGrid() {
+            const tray = document.getElementById('unassignedTray');
+            const grid = document.getElementById('interestPodsGrid');
+            const searchVal = (document.getElementById('studentSearchInput')?.value || '').toLowerCase();
+
+            if (!tray || !grid) return;
+
+            // Calculate match metrics
+            let totalMatchCount = 0;
+            let warningCount = 0;
+
+            // Filter tray list
+            let filteredStudents = APP_STATE.students.filter(s => {
+                const matchesSearch = s.name.toLowerCase().includes(searchVal);
+                if (!matchesSearch) return false;
+
+                const currentInterestObj = APP_STATE.interests.find(i => i.id === s.assignedInterest);
+                const isMatch = currentInterestObj && s.preferences.includes(currentInterestObj.name);
+
+                if (APP_STATE.gridFilter === 'warning') {
+                    return !isMatch; // Only show mismatches
+                }
+                return true;
+            });
+
+            // Render Left Roster Tray
+            tray.innerHTML = filteredStudents.map(student => {
+                const currentInterestObj = APP_STATE.interests.find(i => i.id === student.assignedInterest);
+                const isTopMatch = currentInterestObj && currentInterestObj.name === student.preferences[0];
+                const isPartialMatch = currentInterestObj && student.preferences.includes(currentInterestObj.name);
+                const skinObj = APP_STATE.skins.find(sk => sk.id === student.skin) || APP_STATE.skins[0];
+
+                let glowClass = 'glow-match-perfect';
+                if (!isTopMatch && isPartialMatch) glowClass = 'glow-match-partial';
+                if (!isPartialMatch) {
+                    glowClass = 'glow-match-warning';
+                    warningCount++;
+                } else {
+                    totalMatchCount++;
+                }
+
+                return `
+                    <div draggable="true" 
+                         ondragstart="handleDragStart(event, '${student.id}')"
+                         onclick="openStudentModal('${student.id}')"
+                         class="glass-panel-interactive p-2.5 rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing ${glowClass}">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-xl">${skinObj.emoji}</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">${student.name}</h4>
+                                <p class="text-[10px] text-slate-400 truncate max-w-[120px]">1st: ${student.preferences[0]}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            ${!isPartialMatch ? '<span class="text-[10px] font-bold text-cosmic-rose"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Mismatch</span>' : '<span class="text-[10px] font-bold text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Matched</span>'}
+                            <p class="text-[9px] text-slate-500 uppercase">${currentInterestObj ? currentInterestObj.name.split('&')[0] : 'Unassigned'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update header warning metrics
+            const harmonyScoreEl = document.getElementById('harmonyScore');
+            if (harmonyScoreEl) {
+                const harmonyPct = Math.round((totalMatchCount / APP_STATE.students.length) * 100);
+                harmonyScoreEl.textContent = `${harmonyPct}% Harmony`;
+            }
+
+            // Render Right Droppable Interest Pods
+            grid.innerHTML = APP_STATE.interests.map(interest => {
+                const podStudents = APP_STATE.students.filter(s => s.assignedInterest === interest.id);
+
+                return `
+                    <div class="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-col min-h-[220px] transition-all"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event, '${interest.id}')">
+                        
+                        <!-- Pod Header -->
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-2xl">${interest.icon}</span>
+                                <div>
+                                    <h4 class="font-display text-sm font-bold text-white">${interest.name}</h4>
+                                    <p class="text-[10px] text-slate-400">${podStudents.length} Students Assigned</p>
+                                </div>
+                            </div>
+                            <span class="w-3 h-3 rounded-full" style="background-color: ${interest.color}"></span>
+                        </div>
+
+                        <!-- Droppable Zone Tray -->
+                        <div class="flex-1 space-y-2 min-h-[120px] bg-space-950/40 p-2 rounded-xl border border-dashed border-slate-800">
+                            ${podStudents.length === 0 ? '<div class="h-full flex items-center justify-center text-[11px] text-slate-600 italic">Drag students here</div>' : ''}
+                            
+                            ${podStudents.map(student => {
+                                const isTopMatch = student.preferences[0] === interest.name;
+                                const isPartialMatch = student.preferences.includes(interest.name);
+                                const skinObj = APP_STATE.skins.find(sk => sk.id === student.skin) || APP_STATE.skins[0];
+
+                                let statusBorder = 'border-emerald-500/50 bg-emerald-500/10';
+                                if (!isTopMatch && isPartialMatch) statusBorder = 'border-amber-500/50 bg-amber-500/10';
+                                if (!isPartialMatch) statusBorder = 'border-rose-500/70 bg-rose-500/20 glow-match-warning';
+
+                                return `
+                                    <div draggable="true"
+                                         ondragstart="handleDragStart(event, '${student.id}')"
+                                         onclick="openStudentModal('${student.id}')"
+                                         class="p-2 rounded-xl bg-space-900 border ${statusBorder} flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-space-800 transition">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-base">${skinObj.emoji}</span>
+                                            <span class="text-xs font-semibold text-slate-200">${student.name}</span>
+                                        </div>
+                                        ${!isPartialMatch ? '<i class="fa-solid fa-triangle-exclamation text-cosmic-rose text-xs" title="Not in student top 5!"></i>' : '<i class="fa-solid fa-check text-emerald-400 text-xs"></i>'}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Drag Handlers
+        function handleDragStart(e, studentId) {
+            e.dataTransfer.setData('text/plain', studentId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over-pod');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over-pod');
+        }
+
+        function handleDrop(e, targetInterestId) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over-pod');
+            const studentId = e.dataTransfer.getData('text/plain');
+            if (!studentId) return;
+
+            const student = APP_STATE.students.find(s => s.id === studentId);
+            if (student) {
+                student.assignedInterest = targetInterestId;
+                
+                const targetInterestObj = APP_STATE.interests.find(i => i.id === targetInterestId);
+                const isMatch = targetInterestObj && student.preferences.includes(targetInterestObj.name);
+
+                if (isMatch) {
+                    playSound('drop');
+                } else {
+                    playSound('warning');
+                }
+
+                renderDragGrid();
+            }
+        }
+
+        // Auto Harmonize / Optimize assignment solver
+        function autoOptimizeAssignments() {
+            APP_STATE.students.forEach(student => {
+                // Find top matching interest among approved active interests
+                for (let prefTopic of student.preferences) {
+                    const matchInterest = APP_STATE.interests.find(i => i.name === prefTopic);
+                    if (matchInterest) {
+                        student.assignedInterest = matchInterest.id;
+                        break;
+                    }
+                }
+            });
+            playSound('orbitShift');
+            renderDragGrid();
+        }
+
+
+        // ================= TEACHER CURATION & SUBMISSIONS LOGIC =================
+        function renderCurationView() {
+            const analyticsContainer = document.getElementById('submissionAnalyticsList');
+            const approvedContainer = document.getElementById('approvedSetListContainer');
+            if (!analyticsContainer || !approvedContainer) return;
+
+            // Render Student Submissions List
+            analyticsContainer.innerHTML = APP_STATE.rawSubmissions.map((sub, index) => {
+                const maxCount = 20;
+                const pct = Math.round((sub.count / maxCount) * 100);
+
+                return `
+                    <div class="bg-space-900/80 p-3 rounded-xl border ${sub.flag ? 'border-rose-500/40 bg-rose-950/10' : 'border-slate-800'} space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-xs text-white">${sub.topic}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-space-800 text-slate-400 border border-slate-700">${sub.category}</span>
+                                ${sub.flag ? `<span class="text-[10px] font-bold text-cosmic-rose px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30"><i class="fa-solid fa-ban mr-1"></i>${sub.flagReason || 'Flagged'}</span>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-mono font-bold text-cosmic-cyan">${sub.count} Students</span>
+                                <button onclick="toggleApproveSubmission(${index})" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${sub.approved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-space-800 text-slate-400 hover:text-white'}">
+                                    ${sub.approved ? '<i class="fa-solid fa-check mr-1"></i>Approved' : '+ Approve'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-space-950 h-2 rounded-full overflow-hidden">
+                            <div class="h-full ${sub.flag ? 'bg-rose-500' : 'bg-gradient-to-r from-cosmic-purple to-cosmic-cyan'}" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render Approved Active Set List
+            approvedContainer.innerHTML = APP_STATE.interests.map((interest, idx) => `
+                <div class="bg-space-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="text-xl">${interest.icon}</span>
+                        <div>
+                            <p class="text-xs font-bold text-white">${interest.name}</p>
+                            <p class="text-[10px] text-slate-400">${interest.category}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeInterestFromSet('${interest.id}')" class="text-slate-500 hover:text-cosmic-rose p-1 transition" title="Remove from Active Set">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            document.getElementById('activeSetCount').textContent = `${APP_STATE.interests.length} / 8 Active`;
+        }
+
+        function toggleApproveSubmission(index) {
+            const sub = APP_STATE.rawSubmissions[index];
+            sub.approved = !sub.approved;
+
+            if (sub.approved) {
+                if (APP_STATE.interests.length >= 8) {
+                    sub.approved = false;
+                    return;
+                }
+                APP_STATE.interests.push({
+                    id: 'custom-' + Date.now(),
+                    name: sub.topic,
+                    icon: '🌟',
+                    color: '#a855f7',
+                    category: sub.category,
+                    description: 'Teacher approved topic'
+                });
+            } else {
+                APP_STATE.interests = APP_STATE.interests.filter(i => i.name !== sub.topic);
+            }
+            renderCurationView();
+        }
+
+        function removeInterestFromSet(interestId) {
+            if (APP_STATE.interests.length <= 3) return; // keep minimum
+            APP_STATE.interests = APP_STATE.interests.filter(i => i.id !== interestId);
+            renderCurationView();
+        }
+
+        function addCustomInterestTopic() {
+            const nameInput = document.getElementById('customTopicName');
+            const categorySelect = document.getElementById('customTopicCategory');
+
+            if (!nameInput || !nameInput.value.trim()) return;
+
+            if (APP_STATE.interests.length >= 8) return;
+
+            APP_STATE.interests.push({
+                id: 'custom-' + Date.now(),
+                name: nameInput.value.trim(),
+                icon: '⚡',
+                color: '#ec4899',
+                category: categorySelect.value,
+                description: 'Custom teacher added topic'
+            });
+
+            nameInput.value = '';
+            renderCurationView();
+        }
+
+        function applyCuratedSetList() {
+            autoOptimizeAssignments();
+            switchTab('galaxy-view');
+        }
+
+        function generateFreshStudentSubmissions() {
+            playSound('drop');
+            renderCurationView();
+        }
+
+
+        // ================= ROTATION & SKINS LOGIC =================
+        function renderScheduleView() {
+            const container = document.getElementById('orbitHistoryContainer');
+            if (!container) return;
+
+            const history = [
+                { month: 'October Orbit (Current)', active: true, harmony: '92%', topics: ['Space', 'Ballet', 'Robotics', 'Marine', 'Fossils', 'Creative', 'Chemistry', 'Botany'] },
+                { month: 'September Orbit', active: false, harmony: '88%', topics: ['Space', 'Robotics', 'Architecture', 'Oceanography', 'Mythology'] },
+                { month: 'August Orbit', active: false, harmony: '95%', topics: ['Astronomy', 'Coding', 'Digital Art', 'Ecosystems'] }
+            ];
+
+            container.innerHTML = history.map(h => `
+                <div class="bg-space-900/90 p-4 rounded-xl border ${h.active ? 'border-cosmic-purple/50 bg-cosmic-purple/10' : 'border-slate-800'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h4 class="font-display font-bold text-sm text-white">${h.month}</h4>
+                            ${h.active ? '<span class="px-2 py-0.5 rounded-full bg-cosmic-purple/30 text-cosmic-purple text-[10px] font-bold">ACTIVE NOW</span>' : ''}
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Active Planets: ${h.topics.join(', ')}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-mono font-bold text-emerald-400">${h.harmony} Harmony</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function triggerNewOrbitCycleModal() {
+            document.getElementById('newOrbitModal').classList.remove('hidden');
+        }
+
+        function closeNewOrbitModal() {
+            document.getElementById('newOrbitModal').classList.add('hidden');
+        }
+
+        function executeOrbitLaunch() {
+            closeNewOrbitModal();
+            triggerPopUpAnimation();
+            switchTab('galaxy-view');
+        }
+
+        function renderSkinsView() {
+            const grid = document.getElementById('skinsGalleryGrid');
+            if (!grid) return;
+
+            grid.innerHTML = APP_STATE.skins.map(skin => `
+                <div class="glass-panel p-5 rounded-2xl flex flex-col items-center text-center space-y-3 border border-slate-800">
+                    <div class="w-16 h-16 rounded-2xl bg-space-900 border border-slate-700 flex items-center justify-center text-3xl ${skin.glow}">
+                        ${skin.emoji}
+                    </div>
+                    <div>
+                        <h4 class="font-display font-bold text-sm text-white">${skin.name}</h4>
+                        <span class="text-[10px] uppercase font-bold text-cosmic-cyan tracking-wider">${skin.rarity} Skin</span>
+                    </div>
+                    <button class="w-full py-1.5 bg-space-800 hover:bg-space-700 text-xs font-semibold text-slate-300 rounded-xl border border-slate-700 transition">
+                        Equipped on Class
+                    </button>
+                </div>
+            `).join('');
+        }
+
+
+        // ================= STUDENT INSPECTOR MODAL =================
+        function openStudentModal(studentId) {
+            APP_STATE.selectedStudentId = studentId;
+            const student = APP_STATE.students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const modal = document.getElementById('studentModal');
+            const nameEl = document.getElementById('modalStudentName');
+            const podEl = document.getElementById('modalCurrentPod');
+            const prefsList = document.getElementById('modalStudentPrefsList');
+            const reassignSelect = document.getElementById('modalReassignSelect');
+            const skinObj = APP_STATE.skins.find(sk => sk.id === student.skin) || APP_STATE.skins[0];
+
+            nameEl.textContent = student.name;
+            document.getElementById('modalStudentSkin').textContent = `Equipped Skin: ${skinObj.name}`;
+            document.getElementById('modalStudentAvatar').innerHTML = skinObj.emoji;
+
+            const currentInterestObj = APP_STATE.interests.find(i => i.id === student.assignedInterest);
+            podEl.textContent = currentInterestObj ? `${currentInterestObj.icon} ${currentInterestObj.name}` : 'Unassigned';
+
+            // Preferences list
+            prefsList.innerHTML = student.preferences.map((p, idx) => {
+                const isCurrent = currentInterestObj && currentInterestObj.name === p;
+                return `
+                    <li class="flex items-center justify-between p-2 rounded-lg bg-space-950/60 border ${isCurrent ? 'border-emerald-500/50 text-emerald-400' : 'border-slate-800 text-slate-300'}">
+                        <span>#${idx + 1} Choice: ${p}</span>
+                        ${isCurrent ? '<span class="text-[10px] font-bold bg-emerald-500/20 px-2 py-0.5 rounded-md">Assigned</span>' : ''}
+                    </li>
+                `;
+            }).join('');
+
+            // Options dropdown
+            reassignSelect.innerHTML = APP_STATE.interests.map(i => `
+                <option value="${i.id}" ${i.id === student.assignedInterest ? 'selected' : ''}>
+                    Reassign to: ${i.icon} ${i.name}
+                </option>
+            `).join('');
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+        }
+
+        function applyModalReassignment() {
+            const student = APP_STATE.students.find(s => s.id === APP_STATE.selectedStudentId);
+            const select = document.getElementById('modalReassignSelect');
+            if (student && select) {
+                student.assignedInterest = select.value;
+                playSound('drop');
+                closeStudentModal();
+                if (APP_STATE.activeTab === 'grid-view') renderDragGrid();
+            }
+        }
+
+        // Initialize application on window load
+        window.onload = function() {
+            initGalaxyCanvas();
+            renderDragGrid();
+        };
+    </script>
+</body>
+</html>

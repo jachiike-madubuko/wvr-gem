@@ -1,0 +1,118 @@
+/* Base palette — lifted verbatim from web/src/app/globals.css */
+:root {
+  /* Neutrals: warm paper canvas, cool-free chrome */
+  --canvas: #f3ead8;
+  --surface: #fffdf8;
+  --surface-muted: #f4ead6;
+  --ink: #1a1410;
+  --ink-soft: #5c5348;
+  --ink-faint: #8f8578;
+  --line: #e4d6c2;
+
+  /* Accent = ink. Weaver has no colored brand accent; black pills carry emphasis. */
+  --accent: #1a1410;
+  --accent-contrast: #fffdf8;
+
+  /* Signals */
+  --signal-blue: #3d6cff;
+  --signal-coral: #ef5d52;
+  --signal-mint: #1ea35a;
+
+  /* Review + diff surfaces */
+  --highlight: #ffe58a;
+  --locked: #dce6ff;
+  --changed: #c8f5d8;
+  --diff-add: #d1fae5;
+  --diff-del: #fee2e2;
+  --error-surface: #fff1f0;
+
+  /* Calendar subject coding */
+  --cal-math: #3d6cff;
+  --cal-ela: #ef5d52;
+  --cal-science: #1ea35a;
+  --cal-ss: #9b5de5;
+  --cal-art: #f77f00;
+  --cal-mix: #6c47ff;
+  --cal-unit: #f5b400;
+  --cal-unit-ink: #3b2500;
+
+  /* Student path (always dark, never themed) */
+  --student-bg: #000000;
+  --student-nav: #1c1c1e;
+  --student-lock: #3f3f46;
+  --pin-hook: #ffe566;
+  --pin-hook-ink: #3b2500;
+  --pin-try: #6ec8ff;
+  --pin-try-ink: #04233a;
+  --pin-check: #7dffb3;
+  --pin-check-ink: #04301a;
+  --pin-next: #e4a7ff;
+  --pin-next-ink: #2a0840;
+
+  /* Muted board tints (teacher-side preview of the same four pins) */
+  --pin-hook-tint: #fff4cc;
+  --pin-try-tint: #dceeff;
+  --pin-check-tint: #d8f5e3;
+  --pin-next-tint: #f3e2ff;
+
+  /* Interest pack identity colors */
+  --pack-soccer: #2fb86e;
+  --pack-cooking: #f07167;
+  --pack-video-games: #4f7cff;
+  --pack-music: #a855f7;
+  --pack-skate: #f59e0b;
+  --pack-space: #0ea5e9;
+  --pack-animals: #84cc16;
+  --pack-fashion: #ec4899;
+  --pack-basketball: #ef4444;
+  --pack-coding: #6366f1;
+  --pack-custom-1: #4d7c0f;
+  --pack-custom-2: #0d9488;
+  --pack-custom-3: #b45309;
+
+  /* Semantic aliases */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --text-body: var(--ink-soft);
+  --text-heading: var(--ink);
+  --text-kicker: var(--ink-faint);
+  --surface-card: var(--surface);
+  --surface-inset: var(--surface-muted);
+  --border-hairline: var(--line);
+  --action-primary: var(--ink);
+  --action-primary-ink: var(--accent-contrast);
+  --action-create: var(--signal-blue);
+  --action-unit: var(--cal-unit);
+  --action-unit-ink: var(--cal-unit-ink);
+  --selection: #dbe4ff;
+}
+
+/* Dark mode is opt-in via html.dark; teachers default to light for daytime classroom use. */
+html.dark {
+  --canvas: #16131c;
+  --surface: #221e2c;
+  --surface-muted: #2c2738;
+  --ink: #f6f1ea;
+  --ink-soft: #c2b8c8;
+  --ink-faint: #8a8094;
+  --line: #3a3348;
+  --accent: #f6f1ea;
+  --accent-contrast: #16131c;
+  --signal-blue: #7b9bff;
+  --signal-coral: #ff8b82;
+  --signal-mint: #4ade80;
+  --highlight: #6b4e12;
+  --locked: #2a3358;
+  --changed: #1b4a32;
+  --cal-math: #7b9bff;
+  --cal-ela: #ff8b82;
+  --cal-science: #4ade80;
+  --cal-ss: #d8b4fe;
+  --cal-art: #fdba74;
+  --cal-mix: #c4b5fd;
+  --cal-unit: #fbbf24;
+  --cal-unit-ink: #1c1400;
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --selection: #334166;
+}

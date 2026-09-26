@@ -1,0 +1,36 @@
+:root {
+  --space-0-5: 0.125rem;  /* 2px — pill gap in the month grid */
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;      /* the default gap between pills */
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;     /* panel padding, list stack gap */
+  --space-6: 1.5rem;      /* header panel padding */
+  --space-8: 2rem;
+
+  /* Radii — exact values from the app */
+  --radius-shell: 1.5rem;   /* page panels */
+  --radius-card: 1.25rem;   /* nested cards */
+  --radius-quick: 1.75rem;  /* Quick Add popover (rounded-3xl) */
+  --radius-board: 1.4rem;   /* student board article */
+  --radius-pin: 1.35rem;    /* student pin */
+  --radius-inset: 1.2rem;   /* dark board inset */
+  --radius-grid: 1rem;      /* calendar grid clip (rounded-2xl) */
+  --radius-menu: 1rem;      /* theme menu */
+  --radius-pill: 999px;
+
+  /* Layout fixtures */
+  --sidebar-w: 15.5rem;
+  --topbar-h: 3.5rem;
+  --drawer-w: min(42rem, 46vw); /* @kind spacing */
+  --quickadd-w: 360px;
+  --student-max-w: 32rem;
+
+  /* Calendar geometry */
+  --cal-date-row: 32px;
+  --cal-pill-h: 20px;
+  --cal-pill-gap: 2px;
+  --cal-week-min-h: 96px;
+  --cal-max-span-days: 14; /* @kind other */
+}

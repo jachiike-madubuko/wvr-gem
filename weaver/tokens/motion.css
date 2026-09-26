@@ -1,0 +1,39 @@
+:root {
+  --ease-pin: cubic-bezier(0.22, 1, 0.36, 1);  /* @kind other */ /* every student-path entrance */
+  --ease-standard: ease; /* @kind other */
+  --dur-pin-in: 0.45s; /* @kind other */
+  --dur-cta-pop: 0.55s; /* @kind other */
+  --dur-shake: 0.5s; /* @kind other */
+  --dur-burst: 0.9s; /* @kind other */
+  --dur-glow: 1.6s; /* @kind other */
+  --stagger-pin: 70ms;   /* @kind other */ /* per-pin animation-delay in the feed */
+}
+
+/* Student-path motion, verbatim from globals.css. Teacher chrome has no entrance animation. */
+@keyframes student-pin-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes student-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 229, 102, 0.55); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 229, 102, 0); }
+}
+@keyframes student-cta-pop {
+  0% { transform: scale(0.92); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes student-shake {
+  0%, 100% { transform: rotate(0deg); }
+  18% { transform: rotate(-16deg); }
+  36% { transform: rotate(14deg); }
+  54% { transform: rotate(-10deg); }
+  72% { transform: rotate(6deg); }
+}
+@keyframes student-burst {
+  0% { opacity: 0; transform: translateY(8px) scale(0.4); }
+  25% { opacity: 1; transform: translateY(-6px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-28px) scale(0.8); }
+}
+@keyframes weaver-spin { to { transform: rotate(360deg); } }
+@keyframes weaver-pulse { 50% { opacity: 0.5; } }
