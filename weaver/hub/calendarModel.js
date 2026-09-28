@@ -126,6 +126,18 @@ const PACK_DAYS = [
   { id: "fossils", label: "Archaeology", color: "#f59e0b", date: "2026-10-16" },
 ];
 
+export function blocksFromGroups(groups, window) {
+  return groups.map((g) => ({
+    id: `group-${g.id}`,
+    title: g.label,
+    kind: "unit",
+    start: window.start,
+    end: window.end,
+    color: g.color,
+    task: "builder",
+  }));
+}
+
 export function octoberBlocks() {
   return [
     {

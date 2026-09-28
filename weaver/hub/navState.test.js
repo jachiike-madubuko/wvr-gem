@@ -53,12 +53,16 @@ describe("openTask", () => {
   });
 
   test("toggles the same task closed", () => {
-    const open = openTask(createNavState({ face: FACES.missionControl }), TASKS.cadence);
-    expect(openTask(open, TASKS.cadence).task).toBe(TASKS.none);
+    const open = openTask(createNavState({ face: FACES.missionControl }), TASKS.approval);
+    expect(openTask(open, TASKS.approval).task).toBe(TASKS.none);
   });
 
   test("rejects unknown task", () => {
     expect(() => openTask(createNavState(), "preview")).toThrow("invalid task");
+  });
+
+  test("cadence is not a task", () => {
+    expect(() => openTask(createNavState(), "cadence")).toThrow("invalid task");
   });
 });
 
@@ -66,7 +70,6 @@ describe("panelWidth", () => {
   test("builder is wide, others standard, none closed", () => {
     expect(panelWidth(TASKS.builder)).toBe("wide");
     expect(panelWidth(TASKS.approval)).toBe("standard");
-    expect(panelWidth(TASKS.cadence)).toBe("standard");
     expect(panelWidth(TASKS.none)).toBe("closed");
   });
 });
