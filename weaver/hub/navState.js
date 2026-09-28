@@ -12,10 +12,9 @@ export const TASKS = {
   none: null,
   builder: "builder",
   approval: "approval",
-  cadence: "cadence",
 };
 
-const TASK_IDS = new Set([TASKS.builder, TASKS.approval, TASKS.cadence]);
+const TASK_IDS = new Set([TASKS.builder, TASKS.approval]);
 
 export function createNavState(seed = {}) {
   return {
@@ -61,7 +60,7 @@ export function closeTask(state) {
 
 export function panelWidth(task) {
   if (task === TASKS.builder) return "wide";
-  if (task === TASKS.approval || task === TASKS.cadence) return "standard";
+  if (task === TASKS.approval) return "standard";
   return "closed";
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   OCTOBER_2026,
   WEEKDAYS,
+  blocksFromGroups,
   layoutWeekBars,
   monthWeeks,
   octoberBlocks,
@@ -86,4 +87,14 @@ describe("octoberBlocks", () => {
     expect(blocks.find((b) => b.id === "cycle-oct").task).toBe("cadence");
     expect(blocks.find((b) => b.id === "space-2026-10-12").task).toBe("builder");
   });
+});
+
+test("blocksFromGroups one bar per galaxy", () => {
+  const blocks = blocksFromGroups(
+    [{ id: "space", label: "Space", color: "#0ea5e9" }],
+    { start: "2026-10-01", end: "2026-10-14" }
+  );
+  expect(blocks).toEqual([
+    { id: "group-space", title: "Space", kind: "unit", start: "2026-10-01", end: "2026-10-14", color: "#0ea5e9", task: "builder" },
+  ]);
 });
