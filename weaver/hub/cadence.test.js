@@ -37,3 +37,13 @@ test("count mode still returns a time window from anchor using count as weeks", 
 test("rejects bad mode", () => {
   expect(() => setCadenceMode(createCadence(), "orbit")).toThrow("invalid cadence");
 });
+
+test("live cadence edits change the calendar window", () => {
+  const anchor = "2026-10-01";
+  const start = cadenceWindow(createCadence(), anchor);
+  const afterWeeks = cadenceWindow(setTimeCadence(createCadence(), { timeCount: 1 }), anchor);
+  const afterDays = cadenceWindow(setTimeCadence(createCadence(), { timeUnit: "days", timeCount: 2 }), anchor);
+  expect(start).toEqual({ start: "2026-10-01", end: "2026-10-14" });
+  expect(afterWeeks).toEqual({ start: "2026-10-01", end: "2026-10-07" });
+  expect(afterDays).toEqual({ start: "2026-10-01", end: "2026-10-02" });
+});

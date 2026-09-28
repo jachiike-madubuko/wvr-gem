@@ -2229,11 +2229,17 @@
       `;
     }
 
+    function captureBaseline() {
+      if (!window.HubAssign) return;
+      STATE.baseline = window.HubAssign.snapshotAssign(STATE.students, STATE.activePackIds);
+    }
+
     function startPreset() {
       STATE.startMode = "preset";
-      STATE.activePackIds = STATE.packs.slice(0, 4).map((p) => p.id);
-      STATE.students.forEach((s) => { if (!STATE.activePackIds.includes(s.assignedPack)) s.assignedPack = STATE.activePackIds[0]; });
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      const next = window.HubAssign.applyPreset(STATE.students, STATE.packs);
+      STATE.students = next.students;
+      STATE.activePackIds = next.activeIds;
+      captureBaseline();
       renderGroupBuilder();
     }
 
@@ -2241,7 +2247,7 @@
       STATE.startMode = "blank";
       STATE.activePackIds = [];
       STATE.students.forEach((s) => { s.assignedPack = null; });
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      captureBaseline();
       renderGroupBuilder();
     }
 
@@ -2261,7 +2267,7 @@
       const plan = currentPlanPayload();
       STATE.plans = window.HubPlan.savePlan(STATE.plans, plan);
       STATE.planId = plan.id;
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      captureBaseline();
       showToast("Plan saved");
     }
 
@@ -2270,7 +2276,7 @@
       const plan = currentPlanPayload();
       STATE.plans = window.HubPlan.saveAsDraft(STATE.plans, plan);
       STATE.planId = plan.id;
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      captureBaseline();
       showToast("Draft saved");
     }
 
@@ -2418,30 +2424,36 @@
     function setBuilderCadenceMode(mode) {
       STATE.cadence = window.HubCadence.setCadenceMode(STATE.cadence, mode);
       renderCadenceBox();
+      renderMissionCalendar();
     }
 
     function setBuilderTimeUnit(unit) {
       STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { timeUnit: unit });
       renderCadenceBox();
+      renderMissionCalendar();
     }
 
     function setBuilderTimeCount(value) {
       const n = Math.max(1, Number(value) || 1);
       STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { timeCount: n });
+      renderMissionCalendar();
     }
 
     function setBuilderRange(key, value) {
       STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { [key]: value || null });
+      renderMissionCalendar();
     }
 
     function setBuilderCountUnit(unit) {
       STATE.cadence = window.HubCadence.setCountCadence(STATE.cadence, { countUnit: unit });
       renderCadenceBox();
+      renderMissionCalendar();
     }
 
     function setBuilderCount(value) {
       const n = Math.max(1, Number(value) || 1);
       STATE.cadence = window.HubCadence.setCountCadence(STATE.cadence, { count: n });
+      renderMissionCalendar();
     }
 
 
@@ -2459,7 +2471,10 @@
       const strip = document.getElementById('builderPillStrip');
       const board = document.getElementById('galaxyBoard');
       const unassignedChips = document.getElementById('unassignedChips');
-      if (!strip || !board || !unassignedChips) return;
+      if (!strip || !board || !unassignedChips) {
+        if (STATE.nav?.face === "missionControl") renderMissionCalendar();
+        return;
+      }
 
       setStartModeButtons();
       renderCadenceBox();
@@ -2516,6 +2531,7 @@
       renderCanvasPackChips();
       updateHarmonyMetrics();
       renderUnapprovedDrawer();
+      if (STATE.nav?.face === "missionControl") renderMissionCalendar();
     }
 
     // Render Class Interest Grid Table
@@ -2676,7 +2692,7 @@
     function suggestGroups() {
       if (!window.HubAssign) return;
       STATE.students = window.HubAssign.suggestAssignments(STATE.students, STATE.packs, STATE.activePackIds);
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      captureBaseline();
       renderGroupBuilder();
       triggerClusterMotion();
       showToast("Suggested groups from active galaxies");
@@ -2685,7 +2701,7 @@
     function shuffleGroups() {
       if (!window.HubAssign) return;
       STATE.students = window.HubAssign.shuffleAssignments(STATE.students, STATE.packs, STATE.activePackIds);
-      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      captureBaseline();
       renderGroupBuilder();
       triggerClusterMotion();
       showToast("Shuffled groups from active galaxies");
@@ -2693,7 +2709,9 @@
 
     function resetGroups() {
       if (!STATE.baseline || !window.HubAssign) return;
-      STATE.students = window.HubAssign.snapshotStudents(STATE.baseline);
+      const next = window.HubAssign.restoreSnapshot(STATE.students, STATE.activePackIds, STATE.baseline);
+      STATE.students = next.students;
+      STATE.activePackIds = next.activeIds;
       renderGroupBuilder();
       showToast("Restored baseline assignments");
     }
