@@ -1777,9 +1777,9 @@
       const weekDates = window.HubCal.weekContaining(focus.year, focus.month, focus.weekStart);
       const rows = grain === "week" ? [weekDates] : weeks;
       const title = window.HubCal.titleForGrain(grain, focus.year, focus.month, weekDates);
-      const blocks = (focus.year === 2026 && focus.month === 9)
-        ? window.HubCal.octoberBlocks()
-        : [];
+      const span = window.HubCadence.cadenceWindow(STATE.cadence, "2026-10-01");
+      const groups = STATE.packs.filter((p) => STATE.activePackIds.includes(p.id));
+      const blocks = window.HubCal.blocksFromGroups(groups, span);
       const today = "2026-10-12";
 
       root.innerHTML = `
