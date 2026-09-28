@@ -583,6 +583,106 @@
       font-style: italic;
     }
 
+    .builder-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .builder-seg {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-muted);
+    }
+
+    .cadence-box {
+      border-radius: var(--radius-card);
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .cadence-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .cadence-row[hidden] {
+      display: none;
+    }
+
+    .cadence-box input[type="number"],
+    .cadence-box input[type="date"] {
+      height: 2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      background: var(--surface-muted);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      padding: 0 var(--space-3);
+    }
+
+    .cadence-box input[type="number"] {
+      width: 4.5rem;
+    }
+
+    .pill-strip-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .wvr-chip.drag-over {
+      outline: 2px solid var(--ink);
+    }
+
+    #galaxyBoard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .mini-galaxy {
+      min-height: 160px;
+      border-radius: var(--radius-shell);
+      padding: var(--space-3);
+      border: 2px dashed var(--line);
+      background: var(--surface-muted);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      transition: background 150ms var(--ease-standard), border-color 150ms var(--ease-standard);
+    }
+
+    .mini-galaxy.drag-over {
+      border-color: var(--ink);
+      background: var(--locked);
+    }
+
+    .mini-galaxy.unassigned {
+      min-height: 88px;
+    }
+
+    .mini-galaxy-chips {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: var(--space-2);
+      min-height: 72px;
+      flex: 1;
+    }
+
     /* Orbit Canvas Container */
     .orbit-canvas-panel {
       position: relative;
@@ -1048,11 +1148,6 @@
             <span>Interests approval</span>
             <span class="nav-badge-count" id="navCountCurate">8</span>
           </button>
-
-          <button type="button" class="nav-pill-btn" id="tab-btn-cadence" onclick="toggleTask('cadence')">
-            <span>Set cadences</span>
-            <span class="nav-badge-count">14d</span>
-          </button>
         </div>
       </nav>
 
@@ -1149,89 +1244,70 @@
                 <p class="wvr-kicker">Allocation</p>
                 <h1 class="wvr-title">Group builder</h1>
                 <p class="wvr-description">
-                  Drag student pills into interest columns. The model suggests balanced clusters; the teacher owns the room.
+                  Up to four galaxies. Drag a student onto a galaxy or a pack pill.
                 </p>
               </div>
               <div class="wvr-header-actions">
                 <span class="wvr-badge balanced" id="builderBalanceBadge">Balanced</span>
-                <button type="button" class="btn-pill primary" onclick="suggestGroups()">Suggest groups</button>
-                <button type="button" class="btn-pill outline" onclick="reshuffleGroups()">Reshuffle</button>
-                <button type="button" class="btn-pill outline" onclick="resetToSuggested()">Reset to suggested</button>
               </div>
             </header>
 
-            <!-- Active Interests Filter Strip -->
-            <div style="border-radius: var(--radius-card); border: 1px solid var(--line); background: var(--surface); padding: var(--space-4);">
-              <p class="wvr-kicker" style="margin-bottom: var(--space-2);">Active interest packs · pick 3 to 8 packs for rotation</p>
-              <div id="groupBuilderPacksStrip" style="display: flex; flex-wrap: wrap; gap: var(--space-2);"></div>
+            <div class="builder-toolbar">
+              <div class="builder-seg" role="group" aria-label="Start mode">
+                <button type="button" class="btn-pill primary" id="startPresetBtn" onclick="startPreset()">Preset</button>
+                <button type="button" class="btn-pill outline" id="startBlankBtn" onclick="startBlank()">Blank</button>
+              </div>
+              <button type="button" class="btn-pill primary" onclick="suggestGroups()">Suggest</button>
+              <button type="button" class="btn-pill outline" onclick="shuffleGroups()">Shuffle</button>
+              <button type="button" class="btn-pill outline" onclick="resetGroups()">Reset</button>
             </div>
 
-            <!-- Main Allocation Layout: Unassigned Tray + Group Columns -->
-            <div style="display: grid; grid-template-columns: 280px 1fr; gap: var(--space-4); align-items: start;">
-              
-              <!-- Left Roster Tray -->
-              <div style="background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-shell); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3);">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <h3 style="font-size: var(--text-sm); font-weight: var(--weight-semibold); margin: 0;">Student roster</h3>
-                  <span class="wvr-badge neutral" id="rosterCountBadge">24 total</span>
+            <div class="cadence-box" id="cadenceBox">
+              <p class="wvr-kicker" style="margin: 0;">Cadence</p>
+              <div class="cadence-row">
+                <div class="builder-seg" role="group" aria-label="Cadence mode">
+                  <button type="button" class="btn-pill primary" id="cadenceModeTime" onclick="setBuilderCadenceMode('time')">Time</button>
+                  <button type="button" class="btn-pill outline" id="cadenceModeCount" onclick="setBuilderCadenceMode('count')">Lesson/unit</button>
                 </div>
-
-                <input type="text" id="rosterFilterInput" class="topbar-search-input" style="height: 2rem; font-size: var(--text-xs);" placeholder="Filter student..." oninput="renderGroupBuilder()">
-
-                <!-- Match Filter Pills -->
-                <div style="display: flex; gap: var(--space-1);">
-                  <button type="button" class="btn-pill primary" id="filterBtnAll" style="flex: 1; padding: 0.2rem; font-size: 11px;" onclick="setRosterFilter('all')">All</button>
-                  <button type="button" class="btn-pill outline" id="filterBtnWarn" style="flex: 1; padding: 0.2rem; font-size: 11px;" onclick="setRosterFilter('warn')">Mismatches</button>
-                </div>
-
-                <!-- Scrollable list of students (Droppable to return to roster) -->
-                <div id="unassignedRosterList"
-                     ondragover="handleRosterDragOver(event)"
-                     ondragleave="handleRosterDragLeave(event)"
-                     ondrop="handleRosterDrop(event)"
-                     style="display: flex; flex-direction: column; gap: var(--space-2); min-height: 200px; max-height: 480px; overflow-y: auto; padding: 4px; border-radius: var(--radius-card); border: 1px dashed transparent; transition: all 120ms ease;"></div>
-              </div>
-
-              <!-- Right Group Columns Grid -->
-              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-                <div id="groupColumnsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3);"></div>
-
-                <!-- Outliers & Review Strip -->
-                <div style="border-radius: var(--radius-card); border: 1px solid var(--line); background: var(--surface); padding: var(--space-4);">
-                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2);">
-                    <div>
-                      <p class="wvr-kicker" style="margin-bottom: 2px;">Outliers & special interests</p>
-                      <p style="font-size: var(--text-xs); color: var(--ink-soft); margin: 0;">
-                        Students whose primary curiosity sits outside current groups. You can create a one-off studio packet or let them cross-pollinate.
-                      </p>
-                    </div>
-                    <button type="button" class="btn-pill unit" style="font-size: 11px; padding: 0.25rem 0.65rem;" onclick="createNewOutlierGroup()">New studio packet</button>
+                <div id="cadenceTimeFields" class="cadence-row">
+                  <input type="number" id="cadenceTimeCount" min="1" value="2" aria-label="Time count" oninput="setBuilderTimeCount(this.value)">
+                  <div class="builder-seg" role="group" aria-label="Time unit">
+                    <button type="button" class="btn-pill outline" id="cadenceUnitDays" onclick="setBuilderTimeUnit('days')">days</button>
+                    <button type="button" class="btn-pill primary" id="cadenceUnitWeeks" onclick="setBuilderTimeUnit('weeks')">weeks</button>
+                    <button type="button" class="btn-pill outline" id="cadenceUnitRange" onclick="setBuilderTimeUnit('range')">range</button>
                   </div>
-                  <div id="outliersContainer" style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3);"></div>
                 </div>
-
-                <!-- Class Interest Grid Table -->
-                <div style="border-radius: var(--radius-shell); border: 1px solid var(--line); background: var(--surface); overflow: hidden;">
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line);">
-                    <div>
-                      <p class="wvr-kicker" style="margin: 0; font-size: 11px;">Roster overview</p>
-                      <h4 style="font-size: var(--text-sm); font-weight: var(--weight-semibold); margin: 0;">Class interest grid</h4>
-                    </div>
-                    <span class="wvr-badge neutral" id="gridTableCountBadge">24 students · 8 active packs</span>
+                <div id="cadenceRangeFields" class="cadence-row" hidden>
+                  <input type="date" id="cadenceRangeStart" aria-label="Range start" oninput="setBuilderRange('rangeStart', this.value)">
+                  <input type="date" id="cadenceRangeEnd" aria-label="Range end" oninput="setBuilderRange('rangeEnd', this.value)">
+                </div>
+                <div id="cadenceCountFields" class="cadence-row" hidden>
+                  <input type="number" id="cadenceCount" min="1" value="1" aria-label="Lesson or unit count" oninput="setBuilderCount(this.value)">
+                  <div class="builder-seg" role="group" aria-label="Count unit">
+                    <button type="button" class="btn-pill primary" id="cadenceCountLessons" onclick="setBuilderCountUnit('lessons')">lessons</button>
+                    <button type="button" class="btn-pill outline" id="cadenceCountPlans" onclick="setBuilderCountUnit('plans')">plans</button>
                   </div>
-                  <table class="wvr-table">
-                    <thead style="background: var(--surface-muted);">
-                      <tr>
-                        <th style="width: 130px;">Name</th>
-                        <th>Top 5 Preferences</th>
-                        <th style="width: 180px;">Assigned pack</th>
-                        <th style="width: 140px;">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="classInterestGridBody"></tbody>
-                  </table>
                 </div>
               </div>
+            </div>
+
+            <div class="pill-strip-row">
+              <div id="builderPillStrip" class="pill-strip-row"></div>
+              <button type="button" class="btn-pill outline" id="unapprovedToggle" aria-label="Unapproved interests">...</button>
+            </div>
+
+            <div id="galaxyBoard"></div>
+
+            <div id="unassignedGalaxy"
+                 class="mini-galaxy unassigned"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)"
+                 ondrop="handleUnassignedDrop(event)">
+              <div class="group-col-header">
+                <span class="group-col-name">Unassigned</span>
+                <span class="group-col-count" id="unassignedCount">0</span>
+              </div>
+              <div class="mini-galaxy-chips" id="unassignedChips"></div>
             </div>
           </section>
         </div>
@@ -1308,7 +1384,7 @@
 
 
         <!-- ================= VIEW 4: ROTATION CADENCE ================= -->
-        <div id="view-cadence" class="mc-task">
+        <div id="view-cadence" class="mc-task" hidden>
           <section class="wvr-panel">
             <header class="wvr-panel-header">
               <div>
@@ -1526,8 +1602,12 @@
   <script type="module">
     import * as HubNav from "./weaver/hub/navState.js";
     import * as HubCal from "./weaver/hub/calendarModel.js";
+    import * as HubAssign from "./weaver/hub/assign.js";
+    import * as HubCadence from "./weaver/hub/cadence.js";
     window.HubNav = HubNav;
     window.HubCal = HubCal;
+    window.HubAssign = HubAssign;
+    window.HubCadence = HubCadence;
     window.dispatchEvent(new Event("hub-modules-ready"));
   </script>
   <script>
@@ -1547,6 +1627,9 @@
       theme: 'light',
       nav: null,
       calendarFocus: null,
+      cadence: null,
+      startMode: "preset",
+      baseline: null,
 
       // Authentic Weaver Color Map for Packs
       packs: [
@@ -1560,8 +1643,8 @@
         { id: 'botany', label: 'Botany', short: 'BO', color: '#84cc16', category: 'Nature', description: 'Greenhouse plants, seedlings, and bugs' }
       ],
 
-      // Active selected pack IDs
-      activePackIds: ['space', 'robotics', 'ballet', 'marine', 'fossils', 'creative', 'chemistry', 'botany'],
+      // Active selected pack IDs (max 4 galaxies)
+      activePackIds: ['space', 'robotics', 'ballet', 'marine'],
 
       // 24 Students with first names only (Weaver PII policy)
       students: [
@@ -1608,7 +1691,7 @@
     };
 
     function ensureHub() {
-      return window.HubNav && window.HubCal;
+      return window.HubNav && window.HubCal && window.HubAssign && window.HubCadence;
     }
 
     function renderMissionCalendar() {
@@ -1688,6 +1771,7 @@
     }
 
     function onCalendarBlockClick(task) {
+      if (task === "cadence") return;
       STATE.nav = window.HubNav.openTask(STATE.nav, task);
       applyNav();
     }
@@ -1718,13 +1802,12 @@
       document.getElementById("tab-btn-galaxy")?.classList.toggle("active", chrome.galaxyActive);
       document.getElementById("tab-btn-mission")?.classList.toggle("active", chrome.mcActive);
 
-      ["builder", "approval", "cadence"].forEach((id) => {
+      ["builder", "approval"].forEach((id) => {
         document.getElementById(`tab-btn-${id}`)?.classList.toggle("active", chrome.taskActive === id);
       });
 
       document.getElementById("view-builder")?.classList.toggle("active", chrome.taskActive === "builder");
       document.getElementById("view-curate")?.classList.toggle("active", chrome.taskActive === "approval");
-      document.getElementById("view-cadence")?.classList.toggle("active", chrome.taskActive === "cadence");
 
       document.getElementById("view-preview")?.classList.remove("active");
       document.getElementById("view-preview")?.setAttribute("hidden", "");
@@ -2045,42 +2128,145 @@
     }
 
     function toggleActivePack(packId) {
-      if (STATE.activePackIds.includes(packId)) {
-        if (STATE.activePackIds.length <= 3) return; // Need at least 3
-        STATE.activePackIds = STATE.activePackIds.filter(id => id !== packId);
-      } else {
-        if (STATE.activePackIds.length >= 8) return;
-        STATE.activePackIds.push(packId);
-      }
+      if (!window.HubAssign) return;
+      STATE.activePackIds = window.HubAssign.toggleActiveGalaxy(STATE.activePackIds, packId);
       renderCanvasPackChips();
       renderGroupBuilder();
       updateHarmonyMetrics();
+    }
+
+    function studentChipHtml(s) {
+      const status = getStudentMatchStatus(s);
+      const mismatchClass = status === 'mismatch' ? 'mismatched' : (status === 'partial' ? 'secondary' : '');
+      return `
+        <div draggable="true"
+             ondragstart="handleDragStart(event, '${s.id}')"
+             onclick="openStudentDrawer('${s.id}')"
+             class="wvr-student-chip ${mismatchClass}">
+          <span class="chip-dot"></span>
+          <span>${s.firstName}</span>
+        </div>
+      `;
+    }
+
+    function startPreset() {
+      STATE.startMode = "preset";
+      STATE.activePackIds = STATE.packs.slice(0, 4).map((p) => p.id);
+      STATE.students.forEach((s) => { if (!STATE.activePackIds.includes(s.assignedPack)) s.assignedPack = STATE.activePackIds[0]; });
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      renderGroupBuilder();
+    }
+
+    function startBlank() {
+      STATE.startMode = "blank";
+      STATE.activePackIds = [];
+      STATE.students.forEach((s) => { s.assignedPack = null; });
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      renderGroupBuilder();
+    }
+
+    function setStartModeButtons() {
+      const presetBtn = document.getElementById("startPresetBtn");
+      const blankBtn = document.getElementById("startBlankBtn");
+      if (presetBtn) presetBtn.className = STATE.startMode === "preset" ? "btn-pill primary" : "btn-pill outline";
+      if (blankBtn) blankBtn.className = STATE.startMode === "blank" ? "btn-pill primary" : "btn-pill outline";
+    }
+
+    function renderCadenceBox() {
+      const c = STATE.cadence;
+      if (!c) return;
+      const isTime = c.mode === "time";
+      const isRange = isTime && c.timeUnit === "range";
+      const setBtn = (id, on) => {
+        const el = document.getElementById(id);
+        if (el) el.className = on ? "btn-pill primary" : "btn-pill outline";
+      };
+      setBtn("cadenceModeTime", isTime);
+      setBtn("cadenceModeCount", !isTime);
+      setBtn("cadenceUnitDays", c.timeUnit === "days");
+      setBtn("cadenceUnitWeeks", c.timeUnit === "weeks");
+      setBtn("cadenceUnitRange", c.timeUnit === "range");
+      setBtn("cadenceCountLessons", c.countUnit === "lessons");
+      setBtn("cadenceCountPlans", c.countUnit === "plans");
+
+      const timeFields = document.getElementById("cadenceTimeFields");
+      const rangeFields = document.getElementById("cadenceRangeFields");
+      const countFields = document.getElementById("cadenceCountFields");
+      const timeCount = document.getElementById("cadenceTimeCount");
+      if (timeFields) timeFields.hidden = !isTime;
+      if (rangeFields) rangeFields.hidden = !isRange;
+      if (countFields) countFields.hidden = isTime;
+      if (timeCount) {
+        timeCount.hidden = isRange;
+        if (document.activeElement !== timeCount) timeCount.value = c.timeCount;
+      }
+      const rangeStart = document.getElementById("cadenceRangeStart");
+      const rangeEnd = document.getElementById("cadenceRangeEnd");
+      if (rangeStart && document.activeElement !== rangeStart) rangeStart.value = c.rangeStart || "";
+      if (rangeEnd && document.activeElement !== rangeEnd) rangeEnd.value = c.rangeEnd || "";
+      const countInput = document.getElementById("cadenceCount");
+      if (countInput && document.activeElement !== countInput) countInput.value = c.count;
+    }
+
+    function setBuilderCadenceMode(mode) {
+      STATE.cadence = window.HubCadence.setCadenceMode(STATE.cadence, mode);
+      renderCadenceBox();
+    }
+
+    function setBuilderTimeUnit(unit) {
+      STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { timeUnit: unit });
+      renderCadenceBox();
+    }
+
+    function setBuilderTimeCount(value) {
+      const n = Math.max(1, Number(value) || 1);
+      STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { timeCount: n });
+    }
+
+    function setBuilderRange(key, value) {
+      STATE.cadence = window.HubCadence.setTimeCadence(STATE.cadence, { [key]: value || null });
+    }
+
+    function setBuilderCountUnit(unit) {
+      STATE.cadence = window.HubCadence.setCountCadence(STATE.cadence, { countUnit: unit });
+      renderCadenceBox();
+    }
+
+    function setBuilderCount(value) {
+      const n = Math.max(1, Number(value) || 1);
+      STATE.cadence = window.HubCadence.setCountCadence(STATE.cadence, { count: n });
     }
 
 
     // ================= GROUP BUILDER & DRAG ALLOCATION =================
     function setRosterFilter(filter) {
       STATE.rosterFilter = filter;
-      document.getElementById('filterBtnAll').className = filter === 'all' ? 'btn-pill primary' : 'btn-pill outline';
-      document.getElementById('filterBtnWarn').className = filter === 'warn' ? 'btn-pill primary' : 'btn-pill outline';
+      const allBtn = document.getElementById('filterBtnAll');
+      const warnBtn = document.getElementById('filterBtnWarn');
+      if (allBtn) allBtn.className = filter === 'all' ? 'btn-pill primary' : 'btn-pill outline';
+      if (warnBtn) warnBtn.className = filter === 'warn' ? 'btn-pill primary' : 'btn-pill outline';
       renderGroupBuilder();
     }
 
     function renderGroupBuilder() {
-      const stripContainer = document.getElementById('groupBuilderPacksStrip');
-      const gridContainer = document.getElementById('groupColumnsGrid');
-      const rosterContainer = document.getElementById('unassignedRosterList');
-      const outliersContainer = document.getElementById('outliersContainer');
-      const searchVal = (document.getElementById('rosterFilterInput')?.value || '').toLowerCase();
+      const strip = document.getElementById('builderPillStrip');
+      const board = document.getElementById('galaxyBoard');
+      const unassignedChips = document.getElementById('unassignedChips');
+      if (!strip || !board || !unassignedChips) return;
 
-      if (!stripContainer || !gridContainer || !rosterContainer) return;
+      setStartModeButtons();
+      renderCadenceBox();
 
-      // Render pack selection chips
-      stripContainer.innerHTML = STATE.packs.map(p => {
+      strip.innerHTML = STATE.packs.map(p => {
         const count = STATE.students.filter(s => s.assignedPack === p.id).length;
         const on = STATE.activePackIds.includes(p.id);
         return `
-          <button type="button" class="wvr-chip ${on ? 'on' : ''}" onclick="toggleActivePack('${p.id}')">
+          <button type="button" class="wvr-chip ${on ? 'on' : ''}"
+                  data-pack-id="${p.id}"
+                  onclick="handlePillClick('${p.id}')"
+                  ondragover="handleDragOver(event)"
+                  ondragleave="handleDragLeave(event)"
+                  ondrop="handlePillDrop(event, '${p.id}')">
             <span class="pack-avatar sm" style="background: ${p.color}">${p.short}</span>
             <span>${p.label}</span>
             <span class="wvr-chip-count">${count}</span>
@@ -2088,48 +2274,13 @@
         `;
       }).join('');
 
-      // Filtered students for left tray
-      let filteredStudents = STATE.students.filter(s => {
-        const matchName = s.firstName.toLowerCase().includes(searchVal);
-        if (!matchName) return false;
-        const status = getStudentMatchStatus(s);
-        if (STATE.rosterFilter === 'warn') {
-          return status === 'mismatch';
-        }
-        return true;
-      });
-
-      // Render Roster Tray
-      rosterContainer.innerHTML = filteredStudents.map(s => {
-        const status = getStudentMatchStatus(s);
-        const pack = STATE.packs.find(p => p.id === s.assignedPack);
-        const mismatchClass = status === 'mismatch' ? 'mismatched' : (status === 'partial' ? 'secondary' : '');
-
-        return `
-          <div draggable="true"
-               ondragstart="handleDragStart(event, '${s.id}')"
-               onclick="openStudentDrawer('${s.id}')"
-               class="wvr-student-chip ${mismatchClass}"
-               style="justify-content: space-between; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="chip-dot"></span>
-              <span>${s.firstName}</span>
-            </div>
-            <span style="font-size: 10px; font-weight: var(--weight-medium); opacity: 0.7;">
-              ${pack ? pack.short : '—'}
-            </span>
-          </div>
-        `;
-      }).join('');
-
-      // Render Droppable Group Columns
-      gridContainer.innerHTML = STATE.activePackIds.map(packId => {
+      board.innerHTML = STATE.activePackIds.map(packId => {
         const pack = STATE.packs.find(p => p.id === packId);
         if (!pack) return '';
         const members = STATE.students.filter(s => s.assignedPack === packId);
-
         return `
-          <div class="wvr-group-col"
+          <div class="mini-galaxy"
+               data-pack-id="${pack.id}"
                ondragover="handleDragOver(event)"
                ondragleave="handleDragLeave(event)"
                ondrop="handleDrop(event, '${pack.id}')">
@@ -2140,46 +2291,23 @@
               </div>
               <span class="group-col-count">${members.length}</span>
             </div>
-
-            <div class="group-col-droplist">
+            <div class="mini-galaxy-chips">
               ${members.length === 0 ? '<div class="group-col-empty-msg">Drop students here</div>' : ''}
-              ${members.map(s => {
-                const status = getStudentMatchStatus(s);
-                const mismatchClass = status === 'mismatch' ? 'mismatched' : (status === 'partial' ? 'secondary' : '');
-                return `
-                  <div draggable="true"
-                       ondragstart="handleDragStart(event, '${s.id}')"
-                       onclick="openStudentDrawer('${s.id}')"
-                       class="wvr-student-chip ${mismatchClass}">
-                    <span class="chip-dot"></span>
-                    <span>${s.firstName}</span>
-                  </div>
-                `;
-              }).join('')}
+              ${members.map(studentChipHtml).join('')}
             </div>
           </div>
         `;
       }).join('');
 
-      // Outliers: students whose 1st preference is NOT in activePackIds
-      const activeLabels = STATE.activePackIds.map(id => (STATE.packs.find(p => p.id === id) || {}).label);
-      const outliers = STATE.students.filter(s => !activeLabels.includes(s.preferences[0]));
+      const unassigned = STATE.students.filter(s => s.assignedPack === null);
+      const unassignedCount = document.getElementById('unassignedCount');
+      if (unassignedCount) unassignedCount.textContent = String(unassigned.length);
+      unassignedChips.innerHTML = unassigned.length
+        ? unassigned.map(studentChipHtml).join('')
+        : '<div class="group-col-empty-msg">No unassigned students</div>';
 
-      if (outliersContainer) {
-        if (outliers.length === 0) {
-          outliersContainer.innerHTML = '<span style="font-size: var(--text-xs); color: var(--ink-faint);">None right now. All 24 students have matching active packs.</span>';
-        } else {
-          outliersContainer.innerHTML = outliers.map(s => `
-            <div onclick="openStudentDrawer('${s.id}')" class="wvr-student-chip outlier">
-              <span>${s.firstName}</span>
-              <span style="font-size: 10px; font-weight: normal; opacity: 0.8;">wants ${s.preferences[0]}</span>
-            </div>
-          `).join('');
-        }
-      }
-
+      renderCanvasPackChips();
       updateHarmonyMetrics();
-      renderClassInterestGrid();
     }
 
     // Render Class Interest Grid Table
@@ -2254,6 +2382,7 @@
 
     // Drag & Drop Handlers
     let draggedStudentId = null;
+    let skipPillClick = false;
 
     function handleDragStart(e, studentId) {
       draggedStudentId = studentId;
@@ -2271,82 +2400,98 @@
       e.currentTarget.classList.remove('drag-over');
     }
 
+    function applyAssign(studentId, targetPackId) {
+      if (!studentId || !window.HubAssign) return false;
+      const before = STATE.students.find(s => s.id === studentId);
+      const next = window.HubAssign.assignStudent(STATE.students, studentId, targetPackId, STATE.activePackIds);
+      const after = next.students.find(s => s.id === studentId);
+      const assignedChanged = before && after && before.assignedPack !== after.assignedPack;
+      const activeChanged = next.activeIds.join() !== STATE.activePackIds.join();
+      if (!assignedChanged && !activeChanged) return false;
+      STATE.students = next.students;
+      STATE.activePackIds = next.activeIds;
+      renderGroupBuilder();
+      const pack = STATE.packs.find(p => p.id === targetPackId);
+      if (assignedChanged && before && pack) showToast(`${before.firstName} placed in ${pack.label}`);
+      return true;
+    }
+
     function handleDrop(e, targetPackId) {
       e.preventDefault();
       e.currentTarget.classList.remove('drag-over');
       const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
-      if (!studentId) return;
+      applyAssign(studentId, targetPackId);
+    }
 
-      const student = STATE.students.find(s => s.id === studentId);
-      const pack = STATE.packs.find(p => p.id === targetPackId);
-      if (student && pack) {
-        student.assignedPack = targetPackId;
-        renderGroupBuilder();
-        showToast(`${student.firstName} placed in ${pack.label}`);
+    function handlePillDrop(e, targetPackId) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('drag-over');
+      skipPillClick = true;
+      const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
+      applyAssign(studentId, targetPackId);
+    }
+
+    function handlePillClick(packId) {
+      if (skipPillClick) {
+        skipPillClick = false;
+        return;
       }
+      toggleActivePack(packId);
+    }
+
+    function handleUnassignedDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
+      if (!studentId) return;
+      const student = STATE.students.find(s => s.id === studentId);
+      if (!student) return;
+      STATE.students = STATE.students.map(s => s.id === studentId ? { ...s, assignedPack: null } : s);
+      renderGroupBuilder();
+      showToast(`${student.firstName} returned to unassigned`);
     }
 
     function handleRosterDragOver(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      e.currentTarget.style.background = 'var(--locked)';
-      e.currentTarget.style.borderColor = 'var(--ink)';
+      handleDragOver(e);
     }
 
     function handleRosterDragLeave(e) {
-      e.currentTarget.style.background = 'transparent';
-      e.currentTarget.style.borderColor = 'transparent';
+      handleDragLeave(e);
     }
 
     function handleRosterDrop(e) {
-      e.preventDefault();
-      e.currentTarget.style.background = 'transparent';
-      e.currentTarget.style.borderColor = 'transparent';
-      const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
-      if (!studentId) return;
-
-      const student = STATE.students.find(s => s.id === studentId);
-      if (student) {
-        student.assignedPack = null;
-        renderGroupBuilder();
-        showToast(`${student.firstName} returned to roster tray`);
-      }
+      handleUnassignedDrop(e);
     }
 
     // Suggest Groups Heuristic Solver (Ranked preferences)
     function suggestGroups() {
-      showToast("Claude is writing group balances…", true, 1200);
-      setTimeout(() => {
-        const counts = {};
-        STATE.activePackIds.forEach(id => (counts[id] = 0));
+      if (!window.HubAssign) return;
+      STATE.students = window.HubAssign.suggestAssignments(STATE.students, STATE.packs, STATE.activePackIds);
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      renderGroupBuilder();
+      triggerClusterMotion();
+      showToast("Suggested groups from active galaxies");
+    }
 
-        STATE.students.forEach(s => {
-          let target = null;
-          for (let pref of s.preferences) {
-            const matchPack = STATE.packs.find(p => p.label === pref && STATE.activePackIds.includes(p.id));
-            if (matchPack) {
-              target = matchPack.id;
-              break;
-            }
-          }
-          if (!target) {
-            target = STATE.activePackIds.slice().sort((a, b) => counts[a] - counts[b])[0];
-          }
-          s.assignedPack = target;
-          counts[target] = (counts[target] || 0) + 1;
-        });
+    function shuffleGroups() {
+      if (!window.HubAssign) return;
+      STATE.students = window.HubAssign.shuffleAssignments(STATE.students, STATE.packs, STATE.activePackIds);
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      renderGroupBuilder();
+      triggerClusterMotion();
+      showToast("Shuffled groups from active galaxies");
+    }
 
-        renderGroupBuilder();
-        triggerClusterMotion();
-        showToast("Model suggested 8 balanced interest groups");
-      }, 500);
+    function resetGroups() {
+      if (!STATE.baseline || !window.HubAssign) return;
+      STATE.students = window.HubAssign.snapshotStudents(STATE.baseline);
+      renderGroupBuilder();
+      showToast("Restored baseline assignments");
     }
 
     function reshuffleGroups() {
-      showToast("Reshuffling student clusters…", true, 600);
-      setTimeout(() => {
-        suggestGroups();
-      }, 400);
+      shuffleGroups();
     }
 
     function autoHarmonize() {
@@ -2354,7 +2499,7 @@
     }
 
     function resetToSuggested() {
-      suggestGroups();
+      resetGroups();
     }
 
     function createNewOutlierGroup() {
@@ -2750,14 +2895,15 @@
     function bootHub() {
       STATE.nav = window.HubNav.createNavState();
       STATE.calendarFocus = { ...window.HubCal.OCTOBER_2026 };
+      STATE.cadence = window.HubCadence.createCadence();
       applyNav();
       initClusterCanvas();
-      renderGroupBuilder();
+      startPreset();
       renderCurateView();
       renderStudentPathPreview();
     }
 
-    if (window.HubNav && window.HubCal) {
+    if (window.HubNav && window.HubCal && window.HubAssign && window.HubCadence) {
       bootHub();
     } else {
       window.addEventListener("hub-modules-ready", bootHub, { once: true });
