@@ -1504,6 +1504,13 @@
   </div>
 
   <!-- ================= APPLICATION SCRIPT ================= -->
+  <script type="module">
+    import * as HubNav from "./weaver/hub/navState.js";
+    import * as HubCal from "./weaver/hub/calendarModel.js";
+    window.HubNav = HubNav;
+    window.HubCal = HubCal;
+    window.dispatchEvent(new Event("hub-modules-ready"));
+  </script>
   <script>
     // Weaver Classroom State
     const STATE = {
@@ -1519,6 +1526,8 @@
       rosterFilter: 'all',
       previewPackId: 'space',
       theme: 'light',
+      nav: null,
+      calendarFocus: null,
 
       // Authentic Weaver Color Map for Packs
       packs: [
@@ -1578,6 +1587,91 @@
         { topic: 'Skateboarding', count: 5, category: 'Sports', approved: false, flag: false }
       ]
     };
+
+    function ensureHub() {
+      return window.HubNav && window.HubCal;
+    }
+
+    function renderMissionCalendar() {
+      const root = document.getElementById("mcCalendar");
+      if (!root || !ensureHub()) return;
+      const { grain } = STATE.nav;
+      const focus = STATE.calendarFocus;
+      const weeks = window.HubCal.monthWeeks(focus.year, focus.month);
+      const weekDates = window.HubCal.weekContaining(focus.year, focus.month, focus.weekStart);
+      const rows = grain === "week" ? [weekDates] : weeks;
+      const title = window.HubCal.titleForGrain(grain, focus.year, focus.month, weekDates);
+      const blocks = (focus.year === 2026 && focus.month === 9)
+        ? window.HubCal.octoberBlocks()
+        : [];
+      const today = "2026-10-12";
+
+      root.innerHTML = `
+        <section class="wvr-panel">
+          <header class="wvr-panel-header">
+            <div>
+              <p class="wvr-kicker">Mission Control</p>
+              <h1 class="wvr-title">${title}</h1>
+              <p class="wvr-description">Month shows rotation pace. Week shows daily group pace. Open a task from the rail or a calendar bar.</p>
+            </div>
+            <div class="wvr-header-actions">
+              <button type="button" class="btn-pill ${grain === "month" ? "primary" : "outline"}" onclick="setCalendarGrain('month')">Month</button>
+              <button type="button" class="btn-pill ${grain === "week" ? "primary" : "outline"}" onclick="setCalendarGrain('week')">Week</button>
+              <button type="button" class="btn-pill outline" onclick="shiftCalendar(-1)">Prev</button>
+              <button type="button" class="btn-pill outline" onclick="goCalendarToday()">Today</button>
+              <button type="button" class="btn-pill outline" onclick="shiftCalendar(1)">Next</button>
+            </div>
+          </header>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center;font-size:var(--text-xs);color:var(--ink-faint);">
+            ${window.HubCal.WEEKDAYS.map((d) => `<span style="padding:var(--space-1) 0;font-weight:var(--weight-medium);">${d}</span>`).join("")}
+          </div>
+          <div style="margin-top:var(--space-1);overflow:hidden;border-radius:var(--radius-grid);border:1px solid var(--line);background:var(--line);">
+            ${rows.map((dates) => renderWeekRow(dates, blocks, focus, grain, today)).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderWeekRow(dates, blocks, focus, grain, today) {
+      const bars = window.HubCal.layoutWeekBars(blocks, dates);
+      const lanes = bars.reduce((n, b) => Math.max(n, b.lane + 1), 0);
+      const minH = Math.max(grain === "week" ? 220 : 96, 32 + lanes * 22 + 8);
+      const cells = dates.map((date) => {
+        const inMonth = Number(date.slice(5, 7)) === focus.month + 1;
+        const isToday = date === today;
+        return `<div style="min-height:${minH}px;padding:0.375rem;background:${inMonth ? "var(--surface)" : "color-mix(in srgb, var(--surface-muted) 40%, var(--surface))"};box-shadow:${isToday ? "var(--ring-today)" : "none"};">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;font-size:var(--text-xs);font-weight:var(--weight-semibold);background:${isToday ? "var(--signal-blue)" : "transparent"};color:${isToday ? "#fff" : inMonth ? "var(--ink)" : "var(--ink-faint)"};">${Number(date.slice(8))}</span>
+        </div>`;
+      }).join("");
+      const pills = bars.map((bar) => {
+        const face = bar.block.kind === "unit"
+          ? "background:var(--cal-unit);color:var(--cal-unit-ink);"
+          : `background:${bar.block.color || "var(--cal-math)"};color:#fff;`;
+        const radius = `${bar.continuesStart ? "0" : "var(--radius-pill)"} ${bar.continuesEnd ? "0" : "var(--radius-pill)"} ${bar.continuesEnd ? "0" : "var(--radius-pill)"} ${bar.continuesStart ? "0" : "var(--radius-pill)"}`;
+        return `<button type="button" onclick="onCalendarBlockClick('${bar.block.task}')" style="position:absolute;grid-column:${bar.colStart + 1} / span ${bar.colSpan};left:4px;right:4px;top:${32 + bar.lane * 22}px;z-index:10;height:var(--cal-pill-h);padding:0 var(--space-2);text-align:left;font-size:var(--text-micro);font-weight:var(--weight-semibold);font-family:var(--font-sans);border:0;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-radius:${radius};${face}">${bar.block.title}</button>`;
+      }).join("");
+      return `<div style="position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);min-height:${minH}px;">${cells}${pills}</div>`;
+    }
+
+    function setCalendarGrain(grain) {
+      STATE.nav = window.HubNav.setGrain(STATE.nav, grain);
+      applyNav();
+    }
+
+    function shiftCalendar(delta) {
+      STATE.calendarFocus = window.HubCal.shiftFocus(STATE.calendarFocus, STATE.nav.grain, delta);
+      applyNav();
+    }
+
+    function goCalendarToday() {
+      STATE.calendarFocus = { ...window.HubCal.OCTOBER_2026 };
+      applyNav();
+    }
+
+    function onCalendarBlockClick(task) {
+      STATE.nav = window.HubNav.openTask(STATE.nav, task);
+      applyNav();
+    }
 
     // Calculate match status helper
     function getStudentMatchStatus(student) {
