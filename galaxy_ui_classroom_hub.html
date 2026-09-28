@@ -1682,28 +1682,59 @@
       return 'mismatch';
     }
 
-    // Tab Switching
-    function switchView(viewId) {
-      STATE.activeView = viewId;
-      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-pill-btn').forEach(btn => btn.classList.remove('active'));
+    function applyNav() {
+      if (!ensureHub() || !STATE.nav) return;
+      const chrome = window.HubNav.chromeFor(STATE.nav);
+      const stage = document.getElementById("flipStage");
+      const layout = document.getElementById("mcLayout");
+      const rail = document.getElementById("mcTaskRail");
+      const flipBtn = document.getElementById("topbarFlipBtn");
 
-      const target = document.getElementById(`view-${viewId}`);
-      if (target) target.classList.add('active');
+      STATE.isDraggingCanvas = false;
+      if (stage) stage.dataset.face = chrome.face;
+      if (layout) layout.dataset.panel = chrome.panel;
+      if (rail) rail.hidden = !chrome.showTasks;
+      if (flipBtn) flipBtn.textContent = chrome.mcActive ? "Galaxy" : "Mission Control";
 
-      const btn = document.getElementById(`tab-btn-${viewId}`);
-      if (btn) btn.classList.add('active');
+      document.getElementById("tab-btn-galaxy")?.classList.toggle("active", chrome.galaxyActive);
+      document.getElementById("tab-btn-mission")?.classList.toggle("active", chrome.mcActive);
 
-      if (viewId === 'cluster') {
+      ["builder", "approval", "cadence"].forEach((id) => {
+        document.getElementById(`tab-btn-${id}`)?.classList.toggle("active", chrome.taskActive === id);
+      });
+
+      document.getElementById("view-builder")?.classList.toggle("active", chrome.taskActive === "builder");
+      document.getElementById("view-curate")?.classList.toggle("active", chrome.taskActive === "approval");
+      document.getElementById("view-cadence")?.classList.toggle("active", chrome.taskActive === "cadence");
+
+      document.getElementById("view-preview")?.classList.remove("active");
+      document.getElementById("view-preview")?.setAttribute("hidden", "");
+
+      if (chrome.face === "galaxy") {
         resizeCanvas();
         renderCanvasPackChips();
-      } else if (viewId === 'builder') {
-        renderGroupBuilder();
-      } else if (viewId === 'curate') {
-        renderCurateView();
-      } else if (viewId === 'preview') {
-        renderStudentPathPreview();
+      } else {
+        renderMissionCalendar();
+        if (chrome.taskActive === "builder") renderGroupBuilder();
+        if (chrome.taskActive === "approval") renderCurateView();
       }
+    }
+
+    function setFace(face) {
+      if (!ensureHub()) return;
+      if (STATE.nav.face === face) return;
+      STATE.nav = window.HubNav.flipFace(STATE.nav);
+      applyNav();
+    }
+
+    function toggleFace() {
+      STATE.nav = window.HubNav.flipFace(STATE.nav);
+      applyNav();
+    }
+
+    function toggleTask(task) {
+      STATE.nav = window.HubNav.openTask(STATE.nav, task);
+      applyNav();
     }
 
     // Theme Toggle
@@ -2395,7 +2426,7 @@
       showToast("Updating active packs…", true, 800);
       setTimeout(() => {
         suggestGroups();
-        switchView('cluster');
+        setFace('galaxy');
         showToast("Active classroom packs updated");
       }, 500);
     }
@@ -2630,7 +2661,7 @@
       showToast("Launching November cycle…", true, 1200);
       setTimeout(() => {
         suggestGroups();
-        switchView('cluster');
+        setFace('galaxy');
         showToast("November cycle active · Pack assignments locked");
       }, 700);
     }
@@ -2652,19 +2683,44 @@
         e.preventDefault();
         document.getElementById('globalStudentSearch')?.focus();
       }
-      if (e.key === 'Escape') {
-        closeStudentDrawer();
-        closeNewCycleModal();
+      if (e.key === "Escape") {
+        const drawer = document.getElementById("studentDrawer");
+        const modal = document.getElementById("newCycleModal");
+        if (drawer?.classList.contains("open")) {
+          closeStudentDrawer();
+          return;
+        }
+        if (modal?.classList.contains("open")) {
+          closeNewCycleModal();
+          return;
+        }
+        if (STATE.nav?.task) {
+          STATE.nav = window.HubNav.closeTask(STATE.nav);
+          applyNav();
+          return;
+        }
+        if (STATE.nav?.face === "missionControl") {
+          STATE.nav = window.HubNav.flipFace(STATE.nav);
+          applyNav();
+        }
       }
     });
 
-    // Bootstrapping
-    window.addEventListener('DOMContentLoaded', () => {
+    function bootHub() {
+      STATE.nav = window.HubNav.createNavState();
+      STATE.calendarFocus = { ...window.HubCal.OCTOBER_2026 };
+      applyNav();
       initClusterCanvas();
       renderGroupBuilder();
       renderCurateView();
       renderStudentPathPreview();
-    });
+    }
+
+    if (window.HubNav && window.HubCal) {
+      bootHub();
+    } else {
+      window.addEventListener("hub-modules-ready", bootHub, { once: true });
+    }
   </script>
 </body>
 </html>
