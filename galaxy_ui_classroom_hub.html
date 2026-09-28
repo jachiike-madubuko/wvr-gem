@@ -982,12 +982,23 @@
 
     @media (prefers-reduced-motion: reduce) {
       .flip-card {
-        transition: opacity 180ms var(--ease-standard);
         transform: none !important;
       }
-      .flip-stage[data-face="missionControl"] .flip-face-front { opacity: 0; pointer-events: none; }
-      .flip-stage[data-face="galaxy"] .flip-face-back { opacity: 0; pointer-events: none; }
-      .flip-face-back { transform: none; position: relative; }
+      .flip-face {
+        transition: opacity 180ms var(--ease-standard);
+      }
+      .flip-face-back {
+        transform: none;
+      }
+      .flip-stage[data-face="missionControl"] .flip-face-front,
+      .flip-stage[data-face="galaxy"] .flip-face-back {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .flip-stage[data-face="galaxy"] .flip-face-front,
+      .flip-stage[data-face="missionControl"] .flip-face-back {
+        opacity: 1;
+      }
     }
 
     /* Utility Helpers */
@@ -1063,7 +1074,7 @@
 
         <div class="topbar-actions">
           <span class="wvr-badge neutral" id="harmonyTopBadge">96% match harmony</span>
-          <button type="button" class="wvr-badge locked" id="cycleBadgeBtn" onclick="setFace('missionControl')">October cycle · 14d left</button>
+          <button type="button" class="wvr-badge locked" id="cycleBadgeBtn" onclick="goMissionMonth()">October cycle · 14d left</button>
           <button type="button" class="btn-pill outline" id="topbarFlipBtn" onclick="toggleFace()">Flip</button>
           <button type="button" class="icon-disc-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme (Daylight / Dark)">
             <span id="themeGlyph">☀</span>
@@ -1718,6 +1729,19 @@
       document.getElementById("view-preview")?.classList.remove("active");
       document.getElementById("view-preview")?.setAttribute("hidden", "");
 
+      const frontFace = document.querySelector(".flip-face-front");
+      const backFace = document.querySelector(".flip-face-back");
+      if (frontFace) {
+        const hideFront = chrome.face === "missionControl";
+        frontFace.setAttribute("aria-hidden", hideFront ? "true" : "false");
+        frontFace.inert = hideFront;
+      }
+      if (backFace) {
+        const hideBack = chrome.face === "galaxy";
+        backFace.setAttribute("aria-hidden", hideBack ? "true" : "false");
+        backFace.inert = hideBack;
+      }
+
       if (chrome.face === "galaxy") {
         resizeCanvas();
         renderCanvasPackChips();
@@ -1732,6 +1756,15 @@
       if (!ensureHub()) return;
       if (STATE.nav.face === face) return;
       STATE.nav = window.HubNav.flipFace(STATE.nav);
+      applyNav();
+    }
+
+    function goMissionMonth() {
+      if (!ensureHub()) return;
+      if (STATE.nav.face !== "missionControl") {
+        STATE.nav = window.HubNav.flipFace(STATE.nav);
+      }
+      STATE.nav = window.HubNav.setGrain(STATE.nav, "month");
       applyNav();
     }
 
@@ -1830,7 +1863,7 @@
     function startCanvasLoop() {
       if (animId) cancelAnimationFrame(animId);
       function loop() {
-        if (STATE.activeView === 'cluster' && ctx && canvas) {
+        if (STATE.nav?.face === 'galaxy' && ctx && canvas) {
           renderCanvasFrame();
         }
         animId = requestAnimationFrame(loop);
