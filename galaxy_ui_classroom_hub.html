@@ -894,6 +894,94 @@
       50% { box-shadow: 0 0 20px 4px rgba(255, 229, 102, 0.35); }
     }
 
+    :root {
+      --mc-panel-standard: 24rem;
+      --mc-panel-wide: min(40rem, 50vw);
+      --flip-dur: 520ms;
+    }
+
+    .flip-stage {
+      perspective: 1600px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .flip-card {
+      position: relative;
+      width: 100%;
+      min-height: calc(100vh - var(--topbar-h));
+      transform-style: preserve-3d;
+      transition: transform var(--flip-dur) var(--ease-pin);
+    }
+
+    .flip-stage[data-face="missionControl"] .flip-card {
+      transform: rotateY(180deg);
+    }
+
+    .flip-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .flip-face-front {
+      position: relative;
+    }
+
+    .flip-face-back {
+      position: absolute;
+      inset: 0;
+      transform: rotateY(180deg);
+      overflow: auto;
+      padding: var(--space-5) var(--space-6) 5rem;
+    }
+
+    .mc-layout {
+      display: grid;
+      grid-template-columns: 1fr 0fr;
+      min-height: 100%;
+      gap: 0;
+      transition: grid-template-columns 200ms var(--ease-standard);
+    }
+
+    .mc-layout[data-panel="standard"] {
+      grid-template-columns: 1fr var(--mc-panel-standard);
+    }
+
+    .mc-layout[data-panel="wide"] {
+      grid-template-columns: 1fr var(--mc-panel-wide);
+    }
+
+    .mc-calendar {
+      min-width: 0;
+    }
+
+    .mc-panel {
+      min-width: 0;
+      overflow: auto;
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .mc-layout[data-panel="closed"] .mc-panel {
+      border-left: 0;
+      overflow: hidden;
+    }
+
+    .mc-task { display: none; }
+    .mc-task.active { display: block; }
+
+    #mcTaskRail[hidden] { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flip-card {
+        transition: opacity 180ms var(--ease-standard);
+        transform: none !important;
+      }
+      .flip-stage[data-face="missionControl"] .flip-face-front { opacity: 0; pointer-events: none; }
+      .flip-stage[data-face="galaxy"] .flip-face-back { opacity: 0; pointer-events: none; }
+      .flip-face-back { transform: none; position: relative; }
+    }
+
     /* Utility Helpers */
     .view-container { display: none; }
     .view-container.active { display: flex; flex-direction: column; gap: var(--space-5); }
@@ -917,32 +1005,36 @@
       </div>
 
       <nav class="sidebar-nav">
-        <p class="sidebar-kicker" style="padding: 0 var(--space-3); margin-bottom: var(--space-1);">Classroom Tools</p>
-        
-        <button type="button" class="nav-pill-btn active" id="tab-btn-cluster" onclick="switchView('cluster')">
-          <span>Cluster map</span>
+        <p class="sidebar-kicker" style="padding: 0 var(--space-3); margin-bottom: var(--space-1);">Faces</p>
+
+        <button type="button" class="nav-pill-btn active" id="tab-btn-galaxy" onclick="setFace('galaxy')">
+          <span>Galaxy</span>
           <span class="nav-badge-count" id="navCountCluster">8</span>
         </button>
 
-        <button type="button" class="nav-pill-btn" id="tab-btn-builder" onclick="switchView('builder')">
-          <span>Group builder</span>
-          <span class="nav-badge-count" id="navCountStudents">24</span>
+        <button type="button" class="nav-pill-btn" id="tab-btn-mission" onclick="setFace('missionControl')">
+          <span>Mission Control</span>
+          <span class="nav-badge-count">Cal</span>
         </button>
 
-        <button type="button" class="nav-pill-btn" id="tab-btn-curate" onclick="switchView('curate')">
-          <span>Curate topics</span>
-          <span class="nav-badge-count" id="navCountCurate">8</span>
-        </button>
+        <div id="mcTaskRail" hidden>
+          <p class="sidebar-kicker" style="padding: 0 var(--space-3); margin: var(--space-3) 0 var(--space-1);">Tasks</p>
 
-        <button type="button" class="nav-pill-btn" id="tab-btn-cadence" onclick="switchView('cadence')">
-          <span>Rotation cadence</span>
-          <span class="nav-badge-count">14d</span>
-        </button>
+          <button type="button" class="nav-pill-btn" id="tab-btn-builder" onclick="toggleTask('builder')">
+            <span>Group builder</span>
+            <span class="nav-badge-count" id="navCountStudents">24</span>
+          </button>
 
-        <button type="button" class="nav-pill-btn" id="tab-btn-preview" onclick="switchView('preview')">
-          <span>Student path</span>
-          <span class="nav-badge-count">Preview</span>
-        </button>
+          <button type="button" class="nav-pill-btn" id="tab-btn-approval" onclick="toggleTask('approval')">
+            <span>Interests approval</span>
+            <span class="nav-badge-count" id="navCountCurate">8</span>
+          </button>
+
+          <button type="button" class="nav-pill-btn" id="tab-btn-cadence" onclick="toggleTask('cadence')">
+            <span>Set cadences</span>
+            <span class="nav-badge-count">14d</span>
+          </button>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -963,7 +1055,8 @@
 
         <div class="topbar-actions">
           <span class="wvr-badge neutral" id="harmonyTopBadge">96% match harmony</span>
-          <span class="wvr-badge locked">October cycle · 14d left</span>
+          <button type="button" class="wvr-badge locked" id="cycleBadgeBtn" onclick="setFace('missionControl')">October cycle · 14d left</button>
+          <button type="button" class="btn-pill outline" id="topbarFlipBtn" onclick="toggleFace()">Flip</button>
           <button type="button" class="icon-disc-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme (Daylight / Dark)">
             <span id="themeGlyph">☀</span>
           </button>
@@ -971,7 +1064,11 @@
       </header>
 
       <!-- Main Body Stacks -->
-      <main class="app-main">
+      <main class="app-main" style="padding: 0; gap: 0;">
+        <div class="flip-stage" id="flipStage" data-face="galaxy">
+          <div class="flip-card" id="flipCard">
+            <div class="flip-face flip-face-front">
+              <div style="padding: var(--space-5) var(--space-6) 5rem;">
 
         <!-- ================= VIEW 1: CLUSTER MAP (UPGRADED ORBIT) ================= -->
         <div id="view-cluster" class="view-container active">
@@ -1017,9 +1114,16 @@
           </section>
         </div>
 
+              </div>
+            </div>
+
+            <div class="flip-face flip-face-back" id="view-mission">
+              <div class="mc-layout" id="mcLayout" data-panel="closed">
+                <div class="mc-calendar" id="mcCalendar"></div>
+                <aside class="mc-panel" id="mcPanel" aria-label="Mission Control task">
 
         <!-- ================= VIEW 2: GROUP BUILDER (DRAG ALLOCATION) ================= -->
-        <div id="view-builder" class="view-container">
+        <div id="view-builder" class="mc-task">
           <section class="wvr-panel">
             <header class="wvr-panel-header">
               <div>
@@ -1115,7 +1219,7 @@
 
 
         <!-- ================= VIEW 3: CURATE TOPICS ================= -->
-        <div id="view-curate" class="view-container">
+        <div id="view-curate" class="mc-task">
           <section class="wvr-panel">
             <header class="wvr-panel-header">
               <div>
@@ -1185,7 +1289,7 @@
 
 
         <!-- ================= VIEW 4: ROTATION CADENCE ================= -->
-        <div id="view-cadence" class="view-container">
+        <div id="view-cadence" class="mc-task">
           <section class="wvr-panel">
             <header class="wvr-panel-header">
               <div>
@@ -1274,9 +1378,15 @@
           </section>
         </div>
 
+                </aside>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
 
         <!-- ================= VIEW 5: STUDENT PATH PREVIEW ================= -->
-        <div id="view-preview" class="view-container">
+        <div id="view-preview" class="view-container" hidden>
           <section class="wvr-panel" style="background: transparent; box-shadow: none; padding: 0;">
             
             <header class="wvr-panel-header" style="background: var(--surface); padding: var(--space-5); border-radius: var(--radius-card); border: 1px solid var(--line);">
@@ -1307,8 +1417,6 @@
             </div>
           </section>
         </div>
-
-      </main>
     </div>
   </div>
 
