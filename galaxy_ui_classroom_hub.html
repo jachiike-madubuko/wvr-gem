@@ -643,6 +643,63 @@
       gap: var(--space-2);
     }
 
+    .pill-strip-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .pill-strip-wrap > .pill-strip-row {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .unapproved-drawer {
+      flex: 0 0 0;
+      max-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      padding: 0;
+      border: 0 solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      pointer-events: none;
+      transition: max-width 200ms var(--ease-standard), opacity 160ms ease, padding 200ms var(--ease-standard), flex-basis 200ms var(--ease-standard);
+    }
+
+    .unapproved-drawer.open {
+      flex: 0 0 15rem;
+      max-width: 15rem;
+      opacity: 1;
+      padding: var(--space-3);
+      border-width: 1px;
+      pointer-events: auto;
+    }
+
+    .unapproved-row {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface-muted);
+      padding: var(--space-2) var(--space-3);
+      font-family: inherit;
+      font-size: var(--text-xs);
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .unapproved-row:hover {
+      background: var(--locked);
+    }
+
     .wvr-chip.drag-over {
       outline: 2px solid var(--ink);
     }
@@ -1291,9 +1348,21 @@
               </div>
             </div>
 
-            <div class="pill-strip-row">
-              <div id="builderPillStrip" class="pill-strip-row"></div>
-              <button type="button" class="btn-pill outline" id="unapprovedToggle" aria-label="Unapproved interests">...</button>
+            <div class="builder-toolbar plan-actions">
+              <button type="button" class="btn-pill primary" id="savePlanBtn" onclick="saveCurrentPlan()">Save</button>
+              <button type="button" class="btn-pill outline" id="saveDraftBtn" onclick="saveCurrentDraft()">Save as draft</button>
+              <button type="button" class="btn-pill outline" id="deletePlanBtn" onclick="deleteCurrentPlan()">Delete</button>
+            </div>
+
+            <div class="pill-strip-wrap">
+              <div class="pill-strip-row">
+                <div id="builderPillStrip" class="pill-strip-row"></div>
+                <button type="button" class="btn-pill outline" id="unapprovedToggle" aria-label="Unapproved interests" aria-expanded="false" aria-controls="unapprovedDrawer" onclick="toggleUnapprovedDrawer()">...</button>
+              </div>
+              <aside id="unapprovedDrawer" class="unapproved-drawer" aria-label="Unapproved interests">
+                <p class="wvr-kicker" style="margin: 0;">Unapproved</p>
+                <div id="unapprovedList"></div>
+              </aside>
             </div>
 
             <div id="galaxyBoard"></div>
@@ -1604,10 +1673,12 @@
     import * as HubCal from "./weaver/hub/calendarModel.js";
     import * as HubAssign from "./weaver/hub/assign.js";
     import * as HubCadence from "./weaver/hub/cadence.js";
+    import * as HubPlan from "./weaver/hub/planStore.js";
     window.HubNav = HubNav;
     window.HubCal = HubCal;
     window.HubAssign = HubAssign;
     window.HubCadence = HubCadence;
+    window.HubPlan = HubPlan;
     window.dispatchEvent(new Event("hub-modules-ready"));
   </script>
   <script>
@@ -1630,6 +1701,9 @@
       cadence: null,
       startMode: "preset",
       baseline: null,
+      planId: null,
+      plans: [],
+      unapprovedOpen: false,
 
       // Authentic Weaver Color Map for Packs
       packs: [
@@ -1691,7 +1765,7 @@
     };
 
     function ensureHub() {
-      return window.HubNav && window.HubCal && window.HubAssign && window.HubCadence;
+      return window.HubNav && window.HubCal && window.HubAssign && window.HubCadence && window.HubPlan;
     }
 
     function renderMissionCalendar() {
@@ -2129,7 +2203,13 @@
 
     function toggleActivePack(packId) {
       if (!window.HubAssign) return;
+      const wasActive = STATE.activePackIds.includes(packId);
       STATE.activePackIds = window.HubAssign.toggleActiveGalaxy(STATE.activePackIds, packId);
+      if (wasActive && !STATE.activePackIds.includes(packId)) {
+        STATE.students.forEach((s) => {
+          if (s.assignedPack === packId) s.assignedPack = null;
+        });
+      }
       renderCanvasPackChips();
       renderGroupBuilder();
       updateHarmonyMetrics();
@@ -2163,6 +2243,133 @@
       STATE.students.forEach((s) => { s.assignedPack = null; });
       STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
       renderGroupBuilder();
+    }
+
+    function currentPlanPayload() {
+      const plan = window.HubPlan.createPlan({
+        title: "October plan",
+        activeIds: STATE.activePackIds,
+        students: STATE.students,
+        cadence: STATE.cadence,
+      });
+      if (STATE.planId) plan.id = STATE.planId;
+      return plan;
+    }
+
+    function saveCurrentPlan() {
+      if (!window.HubPlan) return;
+      const plan = currentPlanPayload();
+      STATE.plans = window.HubPlan.savePlan(STATE.plans, plan);
+      STATE.planId = plan.id;
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      showToast("Plan saved");
+    }
+
+    function saveCurrentDraft() {
+      if (!window.HubPlan) return;
+      const plan = currentPlanPayload();
+      STATE.plans = window.HubPlan.saveAsDraft(STATE.plans, plan);
+      STATE.planId = plan.id;
+      STATE.baseline = window.HubAssign.snapshotStudents(STATE.students);
+      showToast("Draft saved");
+    }
+
+    function deleteCurrentPlan() {
+      if (STATE.planId && window.HubPlan) {
+        STATE.plans = window.HubPlan.deletePlan(STATE.plans, STATE.planId);
+      }
+      STATE.planId = null;
+      startBlank();
+      showToast("Plan deleted");
+    }
+
+    function packIdFromLabel(label) {
+      const base = String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "topic";
+      let id = base;
+      let n = 2;
+      while (STATE.packs.some((p) => p.id === id)) id = `${base}-${n++}`;
+      return id;
+    }
+
+    function shortFromLabel(label) {
+      const words = String(label).split(/[^A-Za-z0-9]+/).filter(Boolean);
+      if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+      return String(label).slice(0, 2).toUpperCase();
+    }
+
+    const PACK_PALETTE = ["#0ea5e9", "#6366f1", "#ec4899", "#2fb86e", "#f59e0b", "#a855f7", "#14b8a6", "#84cc16", "#f97316", "#64748b"];
+
+    function ensurePackForTopic(topic, category) {
+      const existing = STATE.packs.find((p) => p.label === topic);
+      if (existing) return existing;
+      const pack = {
+        id: packIdFromLabel(topic),
+        label: topic,
+        short: shortFromLabel(topic),
+        color: PACK_PALETTE[STATE.packs.length % PACK_PALETTE.length],
+        category: category || "Custom",
+        description: topic,
+      };
+      STATE.packs.push(pack);
+      return pack;
+    }
+
+    function toggleUnapprovedDrawer() {
+      if (STATE.unapprovedOpen) closeUnapprovedDrawer();
+      else openUnapprovedDrawer();
+    }
+
+    function openUnapprovedDrawer() {
+      STATE.unapprovedOpen = true;
+      renderUnapprovedDrawer();
+    }
+
+    function closeUnapprovedDrawer() {
+      STATE.unapprovedOpen = false;
+      renderUnapprovedDrawer();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[c]));
+    }
+
+    function renderUnapprovedDrawer() {
+      const drawer = document.getElementById("unapprovedDrawer");
+      const list = document.getElementById("unapprovedList");
+      const toggle = document.getElementById("unapprovedToggle");
+      if (!drawer || !list) return;
+      drawer.classList.toggle("open", !!STATE.unapprovedOpen);
+      drawer.inert = !STATE.unapprovedOpen;
+      drawer.setAttribute("aria-hidden", STATE.unapprovedOpen ? "false" : "true");
+      if (toggle) toggle.setAttribute("aria-expanded", STATE.unapprovedOpen ? "true" : "false");
+      const rows = STATE.submissions.filter((s) => !s.approved);
+      if (!rows.length) {
+        list.innerHTML = '<p style="font-size: var(--text-xs); color: var(--ink-faint); margin: 0;">None</p>';
+        return;
+      }
+      list.innerHTML = rows.map((sub) => `
+        <button type="button" class="unapproved-row" onclick='approveUnapprovedTopic(${JSON.stringify(sub.topic)})'>
+          <strong>${escapeHtml(sub.topic)}</strong>
+          ${sub.flag ? '<span class="wvr-badge warning">Flagged</span>' : ""}
+          <span style="color: var(--ink-faint);">${sub.count} kids</span>
+        </button>
+      `).join("");
+    }
+
+    function approveUnapprovedTopic(topic) {
+      const sub = STATE.submissions.find((s) => s.topic === topic && !s.approved);
+      if (!sub) return;
+      sub.approved = true;
+      ensurePackForTopic(sub.topic, sub.category);
+      renderGroupBuilder();
+      renderCurateView();
+      showToast(`Approved ${sub.topic}`);
     }
 
     function setStartModeButtons() {
@@ -2308,6 +2515,7 @@
 
       renderCanvasPackChips();
       updateHarmonyMetrics();
+      renderUnapprovedDrawer();
     }
 
     // Render Class Interest Grid Table
@@ -2880,6 +3088,10 @@
           closeNewCycleModal();
           return;
         }
+        if (STATE.unapprovedOpen) {
+          closeUnapprovedDrawer();
+          return;
+        }
         if (STATE.nav?.task) {
           STATE.nav = window.HubNav.closeTask(STATE.nav);
           applyNav();
@@ -2903,7 +3115,7 @@
       renderStudentPathPreview();
     }
 
-    if (window.HubNav && window.HubCal && window.HubAssign && window.HubCadence) {
+    if (window.HubNav && window.HubCal && window.HubAssign && window.HubCadence && window.HubPlan) {
       bootHub();
     } else {
       window.addEventListener("hub-modules-ready", bootHub, { once: true });
